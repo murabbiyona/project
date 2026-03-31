@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { 
-  GraduationCap, Search, Plus, Calendar, 
+  GraduationCap, Search, Plus,
   Target, ChevronDown, ChevronRight, Check, X, Edit2, Trash2
 } from 'lucide-react';
 

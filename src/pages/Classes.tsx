@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { 
-  GraduationCap, Search, Plus, BarChart2, ArrowUpDown, 
-  LayoutGrid, List, X, Users, BookOpen, ClipboardList
+import {
+  GraduationCap, Search, Plus, BarChart2, ArrowUpDown,
+  LayoutGrid, List, X, Users, BookOpen, ClipboardList, Loader2
 } from 'lucide-react';
+import { useClasses } from '../hooks/useClasses';
 
 type ViewMode = 'grid' | 'list';
 type SortKey = 'name' | 'students' | 'lessons' | 'assignments';
@@ -18,22 +19,15 @@ const classColors = [
   { bg: 'bg-sky-50', icon: 'text-sky-400', dot: 'bg-sky-400' },
 ];
 
-const mockClasses = [
-  { id: 1, name: '5-A', schedule: 'Jum · 10:35', students: 13, lessons: 0, assignments: 0, colorIdx: 0, avatars: ['AI', 'CL', 'DU', '+10'] },
-  { id: 2, name: '5-B', schedule: 'Jum · 9:40', students: 14, lessons: 0, assignments: 0, colorIdx: 1, avatars: ['SK', 'SH', 'GH', '+11'] },
-  { id: 3, name: '5-D', schedule: 'Jum · 8:00', students: 18, lessons: 0, assignments: 0, colorIdx: 2, avatars: ['MU', 'MK', 'MI', '+15'] },
-  { id: 4, name: '6-A', schedule: '16:20 — 17:05', students: 13, lessons: 0, assignments: 0, colorIdx: 3, avatars: ['AK', 'AZ', 'DI', '+10'] },
-  { id: 5, name: '6-B', schedule: '14:40 — 15:25', students: 10, lessons: 0, assignments: 0, colorIdx: 4, avatars: ['AK', 'AN', 'BE', '+10'] },
-  { id: 6, name: '6-D', schedule: '16:30 — 16:15', students: 14, lessons: 0, assignments: 0, colorIdx: 5, avatars: ['AE', 'E', 'E', '+14'] },
-];
-
+// Avatar colors for student initials (used in list view)
 const avatarColors = [
   'bg-rose-400', 'bg-orange-400', 'bg-amber-400', 'bg-emerald-400',
   'bg-teal-400', 'bg-sky-400', 'bg-indigo-400', 'bg-violet-400',
-];
+] as const; void avatarColors;
 
 export default function Classes() {
   const { t } = useTranslation();
+  const { classes, loading, createClass } = useClasses();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,6 +36,7 @@ export default function Classes() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [newClassDesc, setNewClassDesc] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const sortOptions: { key: SortKey; label: string }[] = [
     { key: 'name', label: t('classes.sortName') },
@@ -50,21 +45,42 @@ export default function Classes() {
     { key: 'assignments', label: t('classes.sortAssignments') },
   ];
 
-  const filtered = mockClasses
+  const filtered = classes
     .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
       if (sortKey === 'name') return a.name.localeCompare(b.name);
-      if (sortKey === 'students') return b.students - a.students;
-      if (sortKey === 'lessons') return b.lessons - a.lessons;
-      return b.assignments - a.assignments;
+      if (sortKey === 'students') return b.student_count - a.student_count;
+      if (sortKey === 'lessons') return b.lesson_count - a.lesson_count;
+      return b.assignment_count - a.assignment_count;
     });
 
   const overview = {
-    classes: mockClasses.length,
-    students: mockClasses.reduce((s, c) => s + c.students, 0),
-    lessons: mockClasses.reduce((s, c) => s + c.lessons, 0),
-    assignments: mockClasses.reduce((s, c) => s + c.assignments, 0),
+    classes: classes.length,
+    students: classes.reduce((s, c) => s + c.student_count, 0),
+    lessons: classes.reduce((s, c) => s + c.lesson_count, 0),
+    assignments: classes.reduce((s, c) => s + c.assignment_count, 0),
   };
+
+  async function handleCreateClass() {
+    if (!newClassName.trim()) return;
+    setCreating(true);
+
+    // Parse name like "5-A" -> grade_level: 5, section: "A"
+    const match = newClassName.match(/^(\d+)-?(.*)$/);
+    const gradeLevel = match ? parseInt(match[1]) : 5;
+    const section = match?.[2] || undefined;
+
+    await createClass({
+      name: newClassName.trim(),
+      grade_level: gradeLevel,
+      section,
+    });
+
+    setCreating(false);
+    setNewClassName('');
+    setNewClassDesc('');
+    setShowCreateModal(false);
+  }
 
   return (
     <div className="flex gap-6 h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -77,7 +93,7 @@ export default function Classes() {
             <h1 className="text-xl font-bold text-slate-900">{t('classes.title')}</h1>
           </div>
 
-          {/* Search (inline, expandable) */}
+          {/* Search */}
           {showSearch ? (
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-56 transition-all">
               <Search className="w-4 h-4 text-slate-400" />
@@ -155,35 +171,51 @@ export default function Classes() {
 
         {/* Class Cards */}
         <div className="flex-1 overflow-y-auto p-6">
-          {viewMode === 'grid' ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <GraduationCap className="w-12 h-12 mb-3 text-slate-300" />
+              <p className="text-lg font-medium">{searchQuery ? t('classes.noResults', 'Natija topilmadi') : t('classes.empty', 'Hali sinflar yo\'q')}</p>
+              {!searchQuery && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="mt-3 text-sm text-emerald-600 font-semibold hover:text-emerald-700"
+                >
+                  + {t('classes.newClass')}
+                </button>
+              )}
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {filtered.map((cls) => {
-                const color = classColors[cls.colorIdx];
+              {filtered.map((cls, idx) => {
+                const color = classColors[idx % classColors.length];
                 return (
                   <Link
                     key={cls.id}
                     to={`/classes/${encodeURIComponent(cls.name)}`}
                     className="block border border-slate-200/80 rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
                   >
-                    {/* Card Header with art */}
                     <div className={`${color.bg} h-[120px] relative overflow-hidden flex items-center justify-center`}>
-                      {/* Decorative blobs */}
                       <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-40 ${color.bg} border-4 border-white/30`}></div>
                       <div className={`absolute top-4 right-8 w-14 h-14 rounded-full opacity-30 ${color.bg} border-2 border-white/20`}></div>
-                      <div className={`w-12 h-12 rounded-xl bg-white/70 flex items-center justify-center shadow-sm`}>
+                      <div className="w-12 h-12 rounded-xl bg-white/70 flex items-center justify-center shadow-sm">
                         <GraduationCap className={`w-6 h-6 ${color.icon}`} strokeWidth={1.5} />
                       </div>
                     </div>
 
-                    {/* Card Body */}
                     <div className="p-4 bg-white">
                       <h2 className="font-bold text-slate-900 text-lg">{cls.name}</h2>
-                      <p className={`text-xs font-medium mt-0.5 mb-4 ${color.icon}`}>{t('classes.fri')} · {cls.schedule.split('·')[1]?.trim() || cls.schedule}</p>
+                      <p className={`text-xs font-medium mt-0.5 mb-4 ${color.icon}`}>
+                        {cls.academic_year}
+                      </p>
                       <div className="flex items-center justify-between">
                         {[
-                          { icon: Users, val: cls.students, label: t('classes.students') },
-                          { icon: BookOpen, val: cls.lessons, label: t('classes.lessons') },
-                          { icon: ClipboardList, val: cls.assignments, label: t('classes.assign') },
+                          { icon: Users, val: cls.student_count, label: t('classes.students') },
+                          { icon: BookOpen, val: cls.lesson_count, label: t('classes.lessons') },
+                          { icon: ClipboardList, val: cls.assignment_count, label: t('classes.assign') },
                         ].map(({ icon: Icon, val, label }) => (
                           <div key={label} className="flex flex-col items-center gap-1">
                             <Icon className={`w-4 h-4 ${color.icon}`} strokeWidth={1.5} />
@@ -199,10 +231,11 @@ export default function Classes() {
           ) : (
             <div className="space-y-3">
               {filtered.map((cls, i) => {
-                const color = classColors[cls.colorIdx];
+                const color = classColors[i % classColors.length];
                 return (
-                  <div
+                  <Link
                     key={cls.id}
+                    to={`/classes/${encodeURIComponent(cls.name)}`}
                     className="flex items-center gap-4 border border-slate-200/80 rounded-xl px-5 py-4 hover:shadow-sm transition-shadow cursor-pointer bg-white hover:bg-slate-50/50"
                   >
                     <div className={`w-10 h-10 rounded-xl ${color.bg} flex items-center justify-center flex-shrink-0`}>
@@ -210,25 +243,14 @@ export default function Classes() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="font-bold text-slate-900">{cls.name}</h2>
-                      <p className="text-xs text-slate-400 mt-0.5">{cls.schedule}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{cls.academic_year}</p>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-slate-400 font-medium">
-                      <span>{cls.lessons} {t('classes.lessons')}</span>
-                      <span>{cls.assignments} {t('classes.sortAssignments')}</span>
+                      <span>{cls.student_count} {t('classes.students')}</span>
+                      <span>{cls.lesson_count} {t('classes.lessons')}</span>
+                      <span>{cls.assignment_count} {t('classes.sortAssignments')}</span>
                     </div>
-                    {/* Avatar stack */}
-                    <div className="flex -space-x-2">
-                      {cls.avatars.map((av, j) => (
-                        <div
-                          key={j}
-                          className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white ring-0 flex-shrink-0
-                            ${av.startsWith('+') ? 'bg-slate-600' : avatarColors[(i * 4 + j) % avatarColors.length]}`}
-                        >
-                          {av}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -272,7 +294,7 @@ export default function Classes() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="px-6 py-5 space-y-5">
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateClass(); }} className="px-6 py-5 space-y-5">
               <div>
                 <label className="text-sm font-semibold text-slate-700 block mb-2">
                   {t('classes.className')} <span className="text-red-400">*</span>
@@ -285,7 +307,7 @@ export default function Classes() {
                     placeholder={t('classes.classNamePlaceholder')}
                     className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
-                  <button className="w-9 h-9 bg-rose-400 text-white rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0">🎓</button>
+                  <button type="button" className="w-9 h-9 bg-rose-400 text-white rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0">🎓</button>
                 </div>
               </div>
               <div>
@@ -303,12 +325,12 @@ export default function Classes() {
               </div>
               <div className="flex items-center justify-between">
                 <label className="text-sm font-semibold text-slate-700">{t('classes.weeklySchedule')}</label>
-                <button className="flex items-center gap-1 text-sm text-primary-600 font-semibold hover:text-primary-700">
+                <button type="button" className="flex items-center gap-1 text-sm text-primary-600 font-semibold hover:text-primary-700">
                   <Plus className="w-4 h-4" /> {t('classes.addTimeSlot')}
                 </button>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">{t('classes.noSchedule')}</p>
-            </div>
+            </form>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -316,7 +338,12 @@ export default function Classes() {
               >
                 {t('classes.cancel')}
               </button>
-              <button className="px-4 py-2 text-sm font-semibold bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">
+              <button
+                onClick={handleCreateClass}
+                disabled={creating || !newClassName.trim()}
+                className="px-4 py-2 text-sm font-semibold bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {creating && <Loader2 className="w-4 h-4 animate-spin" />}
                 {t('classes.create')}
               </button>
             </div>

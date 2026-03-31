@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Bell, Grip, X, Circle, Globe } from 'lucide-react';
+import { Search, Bell, X, Circle, Globe } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -14,12 +14,6 @@ export default function Header() {
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     setShowLangMenu(false);
-  };
-
-  const getLangLabel = () => {
-    if (i18n.language === 'en') return 'en EN';
-    if (i18n.language === 'ru') return 'ru RU';
-    return 'uz UZ';
   };
 
   return (

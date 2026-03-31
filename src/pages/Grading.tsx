@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { 
-  GraduationCap, Search, Plus, ClipboardList, Tag, 
+import {
+  GraduationCap, Search, Plus, ClipboardList, Tag,
   Filter, EyeOff, Maximize2, FileText, Check, Link2, ListPlus, ChevronDown, Calendar, X, Edit2, Trash2
 } from 'lucide-react';
+import VoiceGrading from '../components/grading/VoiceGrading';
 
 const CLASSES = [
   { id: '6-D', label: '6-D', time: '13:00 - 13:45', color: 'bg-blue-100', textColor: 'text-blue-500', dot: 'bg-blue-500', students: [{i:'AA'}] },
@@ -202,7 +203,16 @@ export default function Grading() {
                   <button className="w-10 h-10 flex items-center justify-center rounded-[14px] bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors shadow-sm">
                     <Maximize2 className="w-4 h-4" />
                   </button>
-                  <button 
+                  {selectedClassId && (
+                    <VoiceGrading
+                      classId={selectedClassId}
+                      subjectId=""
+                      students={[]}
+                      gradeType="formative"
+                      onGradeAdded={() => {}}
+                    />
+                  )}
+                  <button
                     onClick={() => setShowCreateAssignmentModal(true)}
                     className="h-10 px-5 flex items-center gap-2 rounded-[14px] bg-slate-900 text-white text-[13px] font-bold hover:bg-slate-800 transition-colors shadow-lg"
                   >

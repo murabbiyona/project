@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { 
-  GraduationCap, Search, Plus, Calendar, 
+  GraduationCap, Search, Calendar,
   Filter, Upload, ChevronLeft, ChevronRight, Check, X, Clock, FileText, Edit2
 } from 'lucide-react';
 
@@ -246,7 +246,7 @@ export default function Attendance() {
                       </>
                     ) : (
                       visibleDays.map(d => {
-                        const s = student.status[d.toString()];
+                        const s = (student.status as Record<string, string | null>)[d.toString()];
                         return (
                           <td key={d} className="px-2 py-4 text-center border-r border-slate-50">
                             {s ? (

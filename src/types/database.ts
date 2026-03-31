@@ -267,6 +267,24 @@ export interface Database {
       subscriptions: { Row: Subscription; Insert: Partial<Subscription> & Pick<Subscription, 'user_id' | 'plan_id' | 'expires_at'>; Update: Partial<Subscription> }
       ai_credits: { Row: AiCredits; Insert: Partial<AiCredits> & Pick<AiCredits, 'user_id'>; Update: Partial<AiCredits> }
       chat_messages: { Row: ChatMessage; Insert: Partial<ChatMessage> & Pick<ChatMessage, 'room_id' | 'sender_id' | 'content'>; Update: Partial<ChatMessage> }
+      voice_grades: { Row: VoiceGrade; Insert: Partial<VoiceGrade> & Pick<VoiceGrade, 'teacher_id' | 'class_id' | 'subject_id' | 'transcript'>; Update: Partial<VoiceGrade> }
     }
   }
+}
+
+export interface VoiceGrade {
+  id: string
+  teacher_id: string
+  class_id: string
+  subject_id: string
+  audio_url: string | null
+  transcript: string
+  detected_student_name: string | null
+  detected_score: number | null
+  student_id: string | null
+  grade_id: string | null
+  confidence: number | null
+  status: 'pending' | 'confirmed' | 'rejected' | 'ambiguous'
+  candidate_students: Record<string, unknown>[]
+  created_at: string
 }
