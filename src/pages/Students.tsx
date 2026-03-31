@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Search, Plus, Filter, MoreVertical, Mail, Phone, ChevronRight, 
-  Calendar, Check, X, Download, Sliders, MessageSquare, Trash2, 
-  UserPen, GraduationCap, Edit, Share2, ArrowUpRight, ChevronDown
+  Search, Plus, Filter, Mail, Phone,
+  Calendar, Check, X, Download, Sliders, MessageSquare, Trash2,
+  UserPen, GraduationCap, Edit, ArrowUpRight, ChevronDown
 } from 'lucide-react';
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────

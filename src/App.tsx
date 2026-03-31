@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Classes from './pages/Classes';
 import Students from './pages/Students';
@@ -15,11 +16,24 @@ import Portfolio from './pages/Portfolio';
 import Feedback from './pages/Feedback';
 import Subscription from './pages/Subscription';
 import ClassDetail from './pages/ClassDetail';
+import Rewards from './pages/Rewards';
+import Login from './pages/Login';
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<DashboardLayout />}>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected teacher routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="classes" element={<Classes />} />
         <Route path="students" element={<Students />} />
@@ -32,6 +46,7 @@ function App() {
         <Route path="tasks" element={<Tasks />} />
         <Route path="lessons" element={<Lessons />} />
         <Route path="lessons/editor" element={<LessonEditorPage />} />
+        <Route path="rewards" element={<Rewards />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription" element={<Subscription />} />
         <Route path="classes/:className" element={<ClassDetail />} />

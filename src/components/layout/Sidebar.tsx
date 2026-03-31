@@ -1,23 +1,26 @@
 import { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  GraduationCap, 
-  Calendar, 
-  CalendarDays, 
-  BookOpen, 
-  Users, 
-  BarChart2, 
-  ClipboardCheck, 
-  Target, 
+import {
+  GraduationCap,
+  Calendar,
+  CalendarDays,
+  BookOpen,
+  Users,
+  BarChart2,
+  ClipboardCheck,
+  Target,
   CheckSquare,
   Wand2,
   HardDrive,
   ChevronDown,
   Check,
-  Plus
+  Plus,
+  LogOut,
+  Star
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
 
 const semesters = [
   { id: 1, label: "2025-2026-o'quv yili", date: "Sep 2, 2025 — May 25, 2026" },
@@ -26,6 +29,7 @@ const semesters = [
 
 export default function Sidebar() {
   const { t } = useTranslation();
+  const { profile, signOut } = useAuth();
   const [showSemester, setShowSemester] = useState(false);
   const [activeSemester, setActiveSemester] = useState(0);
 
@@ -57,6 +61,7 @@ export default function Sidebar() {
       title: t('sidebar.activitiesTitle'),
       items: [
         { name: t('sidebar.tasks'), href: '/tasks', icon: CheckSquare },
+        { name: t('sidebar.rewards', "Rag'batlar"), href: '/rewards', icon: Star },
       ]
     }
   ];
@@ -151,8 +156,27 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Footer info blocks like reference */}
+        {/* Footer info blocks */}
         <div className="flex flex-col gap-2 p-2 border-t border-[#e4e4e7] px-3 pt-3 pb-4 shrink-0 mx-2">
+          {/* User profile & sign out */}
+          {profile && (
+            <div className="flex items-center gap-2.5 px-1.5 mb-2">
+              <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-zinc-800 truncate">{profile.full_name}</p>
+                <p className="text-[10px] text-zinc-400 truncate">{profile.email || profile.phone}</p>
+              </div>
+              <button
+                onClick={signOut}
+                className="p-1.5 rounded-md hover:bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
+                title={t('auth.logout', 'Chiqish')}
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
            <div className="space-y-1.5 px-1.5 mt-1">
             <span className="text-zinc-500 flex items-center gap-1.5 text-xs">
               <Wand2 className="w-3.5 h-3.5" /> {t('sidebar.aiMagic')}

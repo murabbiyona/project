@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { 
   Folder, BarChart2, FileText, Edit2, Mail, Phone, MessageSquare, 
   GraduationCap, ClipboardCheck, AlertTriangle, TrendingUp, Hexagon,
@@ -8,7 +7,6 @@ import {
 } from 'lucide-react';
 
 export default function Portfolio() {
-  const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview'); // overview, assignments, notes
   const [showEditGradeModal, setShowEditGradeModal] = useState(false);
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState(false);

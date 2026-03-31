@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Bell, Grip, X, Circle, Globe } from 'lucide-react';
+import { Search, Bell, X, Circle, Globe } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
+  const { profile } = useAuth();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const location = useLocation();
@@ -12,12 +14,6 @@ export default function Header() {
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     setShowLangMenu(false);
-  };
-
-  const getLangLabel = () => {
-    if (i18n.language === 'en') return 'en EN';
-    if (i18n.language === 'ru') return 'ru RU';
-    return 'uz UZ';
   };
 
   return (
@@ -96,7 +92,7 @@ export default function Header() {
             <button className="rounded-full p-0.5 hover:bg-accent transition-colors size-auto outline-none">
               <div className="relative flex shrink-0 overflow-hidden rounded-full size-8">
                 <div className="flex size-full items-center justify-center rounded-full bg-zinc-900 text-white text-sm font-semibold">
-                  OA
+                  {profile ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                 </div>
               </div>
             </button>
