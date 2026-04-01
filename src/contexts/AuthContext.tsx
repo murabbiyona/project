@@ -39,13 +39,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Timeout — 5 sekunddan keyin loading ni to'xtatish
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 5000)
+
     // Mavjud sessiyani tekshirish
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      clearTimeout(timeout)
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
       if (currentSession?.user) {
         fetchProfile(currentSession.user.id)
       }
+      setLoading(false)
+    }).catch(() => {
+      clearTimeout(timeout)
       setLoading(false)
     })
 
@@ -63,7 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Telefon raqam bilan kirish (OTP)
