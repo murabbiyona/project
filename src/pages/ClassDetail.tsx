@@ -22,17 +22,21 @@ const classColors: Record<string, { bg: string; icon: string; card: string; bord
   '6-A': { bg: 'bg-emerald-50', icon: 'text-emerald-500', card: 'border-emerald-200', border: 'border-emerald-100' },
   '6-B': { bg: 'bg-cyan-50', icon: 'text-cyan-500', card: 'border-cyan-200', border: 'border-cyan-100' },
   '6-D': { bg: 'bg-sky-50', icon: 'text-sky-400', card: 'border-sky-200', border: 'border-sky-100' },
+  '7-A': { bg: 'bg-blue-50', icon: 'text-blue-500', card: 'border-blue-200', border: 'border-blue-100' },
+  '7-B': { bg: 'bg-violet-50', icon: 'text-violet-500', card: 'border-violet-200', border: 'border-violet-100' },
 };
 
 const classData: Record<string, {
   schedule: string; students: number; lessons: number; units: number; remaining: number;
 }> = {
-  '5-A': { schedule: 'Fri · 10:35 AM', students: 13, lessons: 16, units: 8, remaining: 0 },
-  '5-B': { schedule: 'Fri · 9:40 AM', students: 14, lessons: 16, units: 8, remaining: 0 },
-  '5-D': { schedule: 'Fri · 8:00 AM', students: 18, lessons: 16, units: 8, remaining: 0 },
-  '6-A': { schedule: '16:20 — 17:05', students: 13, lessons: 16, units: 8, remaining: 0 },
-  '6-B': { schedule: '14:40 — 15:25', students: 10, lessons: 16, units: 8, remaining: 0 },
-  '6-D': { schedule: '16:30 — 16:15', students: 14, lessons: 16, units: 8, remaining: 0 },
+  '5-A': { schedule: 'Dush · 8:00', students: 32, lessons: 18, units: 8, remaining: 0 },
+  '5-B': { schedule: 'Dush · 9:40', students: 28, lessons: 16, units: 7, remaining: 0 },
+  '5-D': { schedule: 'Sesh · 8:00', students: 18, lessons: 16, units: 8, remaining: 0 },
+  '6-A': { schedule: 'Sesh · 10:35', students: 30, lessons: 22, units: 10, remaining: 0 },
+  '6-B': { schedule: 'Chor · 14:40', students: 27, lessons: 20, units: 9, remaining: 0 },
+  '6-D': { schedule: 'Chor · 16:20', students: 14, lessons: 16, units: 8, remaining: 0 },
+  '7-A': { schedule: 'Pay · 8:00', students: 31, lessons: 24, units: 11, remaining: 0 },
+  '7-B': { schedule: 'Pay · 10:35', students: 29, lessons: 19, units: 9, remaining: 0 },
 };
 
 type Tab = 'overview' | 'planner' | 'lessons' | 'students' | 'grades' | 'attendance' | 'standards';
