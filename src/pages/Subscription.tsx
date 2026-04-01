@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, Send, Copy, CheckCircle, Unlink } from 'lucide-react';
+import { useTelegramLink } from '../hooks/useTelegramLink';
 
 const faqs = [
   { q: 'How do I upgrade or downgrade my plan?', a: 'You can upgrade or downgrade your plan at any time from this page. Simply click the "Upgrade to Pro" button on the Pro plan card. Changes take effect immediately, and billing will be prorated.' },
@@ -12,6 +13,23 @@ const faqs = [
 export default function Subscription() {
   const [billing, setBilling] = useState<'yearly' | 'monthly'>('yearly');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const { linkCode, isLinked, loading: telegramLoading, generateCode, unlinkTelegram } = useTelegramLink();
+  const [copied, setCopied] = useState(false);
+  const [generatingCode, setGeneratingCode] = useState(false);
+
+  const handleGenerateCode = async () => {
+    setGeneratingCode(true);
+    await generateCode();
+    setGeneratingCode(false);
+  };
+
+  const handleCopyCode = () => {
+    if (linkCode) {
+      navigator.clipboard.writeText(linkCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto py-4 animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-10">
@@ -81,6 +99,70 @@ export default function Subscription() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Telegram Integration */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
+            <Send className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-800 text-[15px]">Telegram ulash</h3>
+            <p className="text-xs text-slate-500">Dars yakuni va baho xabarnomalarini Telegramda oling</p>
+          </div>
+        </div>
+
+        {telegramLoading ? (
+          <div className="text-sm text-slate-400">Yuklanmoqda...</div>
+        ) : isLinked ? (
+          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <span className="text-sm font-medium text-emerald-800">Telegram ulangan ✓</span>
+            </div>
+            <button
+              onClick={unlinkTelegram}
+              className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors"
+            >
+              <Unlink className="w-3.5 h-3.5" />
+              Uzish
+            </button>
+          </div>
+        ) : linkCode ? (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">
+              Telegram botga quyidagi kodni yuboring:
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-mono text-lg font-bold text-slate-900 tracking-wider text-center">
+                {linkCode}
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className="p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
+                title="Nusxalash"
+              >
+                {copied ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5 text-slate-500" />}
+              </button>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+              <strong>Qadamlar:</strong><br />
+              1. Telegram da <strong>@MurabbiyonaBot</strong> ni toping<br />
+              2. <strong>/start {linkCode}</strong> yuboring<br />
+              3. Bot avtomatik hisobingizni ulaydi ✓
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleGenerateCode}
+            disabled={generatingCode}
+            className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white rounded-xl py-3 text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+            {generatingCode ? 'Kod yaratilmoqda...' : 'Telegram ulash kodini olish'}
+          </button>
+        )}
       </div>
 
       {/* Pricing Plans */}

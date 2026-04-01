@@ -18,6 +18,7 @@ import Subscription from './pages/Subscription';
 import ClassDetail from './pages/ClassDetail';
 import Rewards from './pages/Rewards';
 import AIPlanner from './pages/AIPlanner';
+import LiveAssessment from './pages/LiveAssessment';
 import Login from './pages/Login';
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
         <Route path="lessons/editor" element={<LessonEditorPage />} />
         <Route path="rewards" element={<Rewards />} />
         <Route path="ai-planner" element={<AIPlanner />} />
+        <Route path="live-assessment" element={<LiveAssessment />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription" element={<Subscription />} />
         <Route path="classes/:className" element={<ClassDetail />} />

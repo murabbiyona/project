@@ -14,6 +14,7 @@ import {
   Wand2,
   HardDrive,
   Brain,
+  Zap,
   ChevronDown,
   Check,
   Plus,
@@ -55,6 +56,7 @@ export default function Sidebar() {
       items: [
         { name: t('sidebar.grades'), href: '/grading', icon: BarChart2 },
         { name: t('sidebar.attendance'), href: '/attendance', icon: ClipboardCheck },
+        { name: 'Jonli Baholash', href: '/live-assessment', icon: Zap },
         { name: t('sidebar.standards'), href: '/standards', icon: Target },
       ]
     },
