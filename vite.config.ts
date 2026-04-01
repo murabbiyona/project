@@ -1,5 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,10 +14,10 @@ export default defineConfig({
       name: 'copy-404',
       closeBundle() {
         // GitHub Pages SPA routing: 404.html = index.html
-        const fs = require('fs')
-        const path = require('path')
         const dist = path.resolve(__dirname, 'dist')
-        fs.copyFileSync(path.join(dist, 'index.html'), path.join(dist, '404.html'))
+        if (fs.existsSync(path.join(dist, 'index.html'))) {
+          fs.copyFileSync(path.join(dist, 'index.html'), path.join(dist, '404.html'))
+        }
       },
     },
   ],
