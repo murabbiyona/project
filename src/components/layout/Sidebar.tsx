@@ -13,6 +13,7 @@ import {
   CheckSquare,
   Wand2,
   HardDrive,
+  Brain,
   ChevronDown,
   Check,
   Plus,
@@ -62,6 +63,12 @@ export default function Sidebar() {
       items: [
         { name: t('sidebar.tasks'), href: '/tasks', icon: CheckSquare },
         { name: t('sidebar.rewards', "Rag'batlar"), href: '/rewards', icon: Star },
+      ]
+    },
+    {
+      title: 'Murabbiy AI',
+      items: [
+        { name: 'AI Dars Rejalashtirish', href: '/ai-planner', icon: Brain },
       ]
     }
   ];
