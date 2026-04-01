@@ -29,6 +29,16 @@ import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentGrades from './pages/parent/ParentGrades';
 import ParentAttendance from './pages/parent/ParentAttendance';
 import ParentMessages from './pages/parent/ParentMessages';
+import MobileLayout from './layouts/MobileLayout';
+import MobileDashboard from './pages/mobile/MobileDashboard';
+import MobileScanner from './pages/mobile/MobileScanner';
+import MobileGrades from './pages/mobile/MobileGrades';
+import MobileProfile from './pages/mobile/MobileProfile';
+import ParentMobileLayout from './layouts/ParentMobileLayout';
+import ParentAppHome from './pages/parent-app/ParentAppHome';
+import ParentAppGrades from './pages/parent-app/ParentAppGrades';
+import ParentAppAttendance from './pages/parent-app/ParentAppAttendance';
+import ParentAppChat from './pages/parent-app/ParentAppChat';
 import Login from './pages/Login';
 
 function App() {
@@ -68,12 +78,28 @@ function App() {
         <Route path="stats" element={<AdminStats />} />
       </Route>
 
-      {/* Ota-ona portali */}
+      {/* Ota-ona portali (desktop) */}
       <Route path="/parent" element={<ParentLayout />}>
         <Route index element={<ParentDashboard />} />
         <Route path="grades" element={<ParentGrades />} />
         <Route path="attendance" element={<ParentAttendance />} />
         <Route path="messages" element={<ParentMessages />} />
+      </Route>
+
+      {/* Ustoz Mobile App (PWA) */}
+      <Route path="/mobile" element={<MobileLayout />}>
+        <Route index element={<MobileDashboard />} />
+        <Route path="scanner" element={<MobileScanner />} />
+        <Route path="grades" element={<MobileGrades />} />
+        <Route path="profile" element={<MobileProfile />} />
+      </Route>
+
+      {/* Ota-ona Mobile App (PWA) */}
+      <Route path="/parent-app" element={<ParentMobileLayout />}>
+        <Route index element={<ParentAppHome />} />
+        <Route path="grades" element={<ParentAppGrades />} />
+        <Route path="attendance" element={<ParentAppAttendance />} />
+        <Route path="chat" element={<ParentAppChat />} />
       </Route>
     </Routes>
   );

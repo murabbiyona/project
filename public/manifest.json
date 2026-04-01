@@ -1,0 +1,49 @@
+{
+  "name": "Murabbiyona LMS",
+  "short_name": "Murabbiyona",
+  "description": "AI-Powered Ta'lim Platformasi — O'qituvchilar, Ota-onalar va Maktab boshqaruvi uchun",
+  "start_url": "/project/",
+  "scope": "/project/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#18181b",
+  "orientation": "portrait-primary",
+  "categories": ["education"],
+  "lang": "uz",
+  "icons": [
+    {
+      "src": "/project/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/project/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ustoz paneli",
+      "url": "/project/",
+      "description": "O'qituvchi dashboard"
+    },
+    {
+      "name": "Ustoz Mobile",
+      "url": "/project/mobile",
+      "description": "Mobil ilova — ustoz"
+    },
+    {
+      "name": "Ota-ona",
+      "url": "/project/parent-app",
+      "description": "Ota-ona portali"
+    },
+    {
+      "name": "Bosh Murabbiy",
+      "url": "/project/admin",
+      "description": "Admin panel"
+    }
+  ]
+}
