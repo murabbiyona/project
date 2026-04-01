@@ -18,6 +18,8 @@ import ClassDetail from './pages/ClassDetail';
 import Rewards from './pages/Rewards';
 import AIPlanner from './pages/AIPlanner';
 import LiveAssessment from './pages/LiveAssessment';
+import Analytics from './pages/Analytics';
+import Reports from './pages/Reports';
 import Login from './pages/Login';
 
 function App() {
@@ -43,6 +45,8 @@ function App() {
         <Route path="rewards" element={<Rewards />} />
         <Route path="ai-planner" element={<AIPlanner />} />
         <Route path="live-assessment" element={<LiveAssessment />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription" element={<Subscription />} />
         <Route path="classes/:className" element={<ClassDetail />} />

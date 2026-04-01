@@ -15,6 +15,8 @@ import {
   HardDrive,
   Brain,
   Zap,
+  TrendingUp,
+  FileText,
   ChevronDown,
   Check,
   Plus,
@@ -65,6 +67,13 @@ export default function Sidebar() {
       items: [
         { name: t('sidebar.tasks'), href: '/tasks', icon: CheckSquare },
         { name: t('sidebar.rewards', "Rag'batlar"), href: '/rewards', icon: Star },
+      ]
+    },
+    {
+      title: 'Analitika',
+      items: [
+        { name: 'Tahlillar', href: '/analytics', icon: TrendingUp },
+        { name: 'Hisobotlar', href: '/reports', icon: FileText },
       ]
     },
     {
