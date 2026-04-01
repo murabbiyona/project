@@ -141,4 +141,30 @@
     box-shadow: 0 0 20px rgba(99, 102, 241, 0.15),
                 0 0 60px rgba(99, 102, 241, 0.05);
   }
+
+  /* Mobile: hide scrollbar in scroll containers */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* QR Scanner container responsive fix */
+  #qr-reader {
+    width: 100% !important;
+    border: none !important;
+  }
+  #qr-reader video {
+    width: 100% !important;
+    border-radius: 0.75rem;
+    object-fit: cover;
+  }
+  #qr-reader__scan_region {
+    min-height: 250px;
+  }
+  #qr-reader__dashboard {
+    display: none !important;
+  }
 }

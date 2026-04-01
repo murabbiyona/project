@@ -108,9 +108,9 @@ export default function MobileGrades() {
       </div>
 
       {/* Save Button */}
-      <div className="fixed bottom-16 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-zinc-100 via-zinc-100 to-transparent pt-6">
+      <div className="sticky bottom-0 pt-4 pb-2 bg-gradient-to-t from-zinc-100 via-zinc-100 to-transparent">
         <button className="w-full min-h-12 bg-emerald-500 text-white font-semibold rounded-xl active:bg-emerald-600 shadow-lg">
-          Saqlash
+          Saqlash ({Object.values(grades).filter(Boolean).length} ta baho)
         </button>
       </div>
     </div>
