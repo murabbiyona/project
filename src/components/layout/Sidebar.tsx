@@ -18,6 +18,7 @@ import {
   TrendingUp,
   FileText,
   ChevronDown,
+  ChevronRight,
   Check,
   Plus,
   LogOut,
@@ -36,6 +37,11 @@ export default function Sidebar() {
   const { profile, signOut } = useAuth();
   const [showSemester, setShowSemester] = useState(false);
   const [activeSemester, setActiveSemester] = useState(0);
+  const [collapsedSections, setCollapsedSections] = useState<Record<number, boolean>>({});
+
+  const toggleSection = (idx: number) => {
+    setCollapsedSections(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
   const menuSections = [
     {
@@ -144,33 +150,40 @@ export default function Sidebar() {
         {/* Navigation - grouped exactly like the reference */}
         <div className="flex-1 overflow-y-auto px-4 scrollbar-hide">
           <div className="flex w-full min-w-0 flex-col gap-0 pb-2">
-            {menuSections.map((section, idx) => (
-              <div key={idx} className="relative flex w-full min-w-0 flex-col py-1 px-3 pt-3">
-                <div className="flex h-6 shrink-0 items-center rounded-md px-2 outline-none text-[10px] font-medium text-zinc-500/80 uppercase tracking-wider mb-0">
-                  {section.title}
+            {menuSections.map((section, idx) => {
+              const isCollapsed = collapsedSections[idx] ?? false;
+              return (
+                <div key={idx} className="relative flex w-full min-w-0 flex-col py-1 px-3 pt-3">
+                  <button
+                    onClick={() => toggleSection(idx)}
+                    className="flex h-6 w-full shrink-0 items-center rounded-md px-2 outline-none text-[10px] font-medium text-zinc-500/80 uppercase tracking-wider mb-0 cursor-pointer hover:text-zinc-700 transition-colors group"
+                  >
+                    <ChevronRight className={`w-3 h-3 mr-1 shrink-0 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`} />
+                    {section.title}
+                  </button>
+                  <div className={`w-full text-sm overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
+                    <ul className="flex w-full min-w-0 flex-col gap-1">
+                      {section.items.map((item) => (
+                        <li key={item.href} className="relative">
+                          <NavLink
+                            to={item.href}
+                            className={({ isActive }) => cn(
+                              "flex w-full items-center gap-3 overflow-hidden rounded-lg p-2.5 text-left font-medium outline-none transition-all duration-200 focus-visible:ring-2 h-9 text-sm",
+                              isActive
+                                ? "bg-zinc-900 font-semibold text-white shadow-sm"
+                                : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
+                            )}
+                          >
+                            <item.icon className="size-4 shrink-0 stroke-[2.1px]" aria-hidden="true" />
+                            <span className="font-medium truncate">{item.name}</span>
+                          </NavLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="w-full text-sm">
-                  <ul className="flex w-full min-w-0 flex-col gap-1">
-                    {section.items.map((item) => (
-                      <li key={item.href} className="relative">
-                        <NavLink
-                          to={item.href}
-                          className={({ isActive }) => cn(
-                            "flex w-full items-center gap-3 overflow-hidden rounded-lg p-2.5 text-left font-medium outline-none transition-all duration-200 focus-visible:ring-2 h-9 text-sm",
-                            isActive 
-                              ? "bg-zinc-900 font-semibold text-white shadow-sm" 
-                              : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
-                          )}
-                        >
-                          <item.icon className="size-4 shrink-0 stroke-[2.1px]" aria-hidden="true" />
-                          <span className="font-medium truncate">{item.name}</span>
-                        </NavLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
