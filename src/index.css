@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-background: #fbfbfc;
-  --color-foreground: #09090b;
-  --color-card: #ffffff;
-  --color-card-foreground: #09090b;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-primary: #18181b;
   --color-primary-foreground: #fafafa;
-  --color-muted: #f4f4f5;
-  --color-muted-foreground: #71717a;
-  --color-border: #e4e4e7;
-  --color-ring: #18181b;
-  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
   --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -25,6 +27,18 @@
   --border: #e4e4e7;
   --ring: #18181b;
   --radius: 0.6rem;
+}
+
+.dark {
+  --background: #1a1a2e;
+  --foreground: #e4e4e7;
+  --card: #16213e;
+  --card-foreground: #e4e4e7;
+  --muted: #1e2a45;
+  --muted-foreground: #a1a1aa;
+  --border: #2a2a4a;
+  --ring: #e4e4e7;
+  color-scheme: dark;
 }
 
 @layer base {
