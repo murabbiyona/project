@@ -195,8 +195,10 @@ export default function AIPlanner() {
     }, 2500);
   };
 
+  const [configCollapsed, setConfigCollapsed] = useState(false);
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div className="flex items-center gap-3">
@@ -230,9 +232,18 @@ export default function AIPlanner() {
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 min-h-0 grid grid-cols-5 gap-5">
-        {/* ─── LEFT SIDE: Configuration Panel (2/5 = 40%) ─── */}
-        <div className="col-span-2 flex flex-col gap-4 min-h-0 overflow-y-auto pr-1 pb-2">
+      <div className="flex-1 min-h-0 flex gap-5">
+        {/* ─── LEFT SIDE: Configuration Panel ─── */}
+        <AnimatePresence initial={false}>
+          {!configCollapsed && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 340, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="shrink-0 overflow-hidden"
+            >
+              <div className="w-[340px] h-full flex flex-col gap-4 overflow-y-auto pr-2 pb-2">
           {/* Planning Model Selector */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
@@ -443,10 +454,34 @@ export default function AIPlanner() {
               />
             )}
           </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─── Collapse/Expand Toggle ─── */}
+        <div className="shrink-0 flex items-start pt-2">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setConfigCollapsed(!configCollapsed)}
+            className="group relative w-8 h-14 rounded-xl bg-card border border-border hover:border-emerald-500/30 flex items-center justify-center transition-all hover:shadow-lg hover:shadow-emerald-500/5 cursor-pointer"
+            title={configCollapsed ? "Panelni ochish" : "Panelni yopish"}
+          >
+            <motion.div
+              animate={{ rotate: configCollapsed ? 0 : 180 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            >
+              <ChevronDown className="size-4 text-muted-foreground group-hover:text-emerald-500 transition-colors -rotate-90" />
+            </motion.div>
+            {/* Decorative dots */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-emerald-500/20" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-emerald-500/20" />
+          </motion.button>
         </div>
 
-        {/* ─── RIGHT SIDE: Chat & Result Panel (3/5 = 60%) ─── */}
-        <div className="col-span-3 flex flex-col min-h-0 bg-card rounded-2xl border border-border overflow-hidden">
+        {/* ─── RIGHT SIDE: Chat & Result Panel ─── */}
+        <div className="flex-1 min-w-0 flex flex-col min-h-0 bg-card rounded-2xl border border-border overflow-hidden">
           {/* Tab Switcher */}
           <div className="flex shrink-0 border-b border-border">
             {[
