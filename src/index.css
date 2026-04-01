@@ -1,21 +1,17 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+  --color-background: #fbfbfc;
+  --color-foreground: #09090b;
+  --color-card: #ffffff;
+  --color-card-foreground: #09090b;
   --color-primary: #18181b;
   --color-primary-foreground: #fafafa;
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-ring: var(--ring);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-border: #e4e4e7;
+  --color-ring: #18181b;
+  
   --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -29,33 +25,6 @@
   --border: #e4e4e7;
   --ring: #18181b;
   --radius: 0.6rem;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-}
-
-.dark {
-  --background: #151518;
-  --foreground: #e4e4e7;
-  --card: #1c1c21;
-  --card-foreground: #e4e4e7;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --border: #2e2e33;
-  --ring: #6b7f5a;
-  --accent: #27272a;
-  --accent-foreground: #e4e4e7;
-}
-
-.dark {
-  --background: #1a1a2e;
-  --foreground: #e4e4e7;
-  --card: #16213e;
-  --card-foreground: #e4e4e7;
-  --muted: #1e2a45;
-  --muted-foreground: #a1a1aa;
-  --border: #2a2a4a;
-  --ring: #e4e4e7;
-  color-scheme: dark;
 }
 
 @layer base {
@@ -109,7 +78,7 @@
 @layer utilities {
   .bg-pattern-active {
     background-color: var(--background);
-    background-image: radial-gradient(var(--border) 0.8px, transparent 0.8px);
+    background-image: radial-gradient(#e4e4e7 0.8px, transparent 0.8px);
     background-size: 24px 24px;
     background-attachment: fixed;
   }
