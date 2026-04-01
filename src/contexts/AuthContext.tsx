@@ -39,13 +39,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Timeout — 5 sekunddan keyin loading ni to'xtatish
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 5000)
+
     // Mavjud sessiyani tekshirish
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      clearTimeout(timeout)
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
       if (currentSession?.user) {
         fetchProfile(currentSession.user.id)
       }
+      setLoading(false)
+    }).catch(() => {
+      clearTimeout(timeout)
       setLoading(false)
     })
 
@@ -63,7 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Telefon raqam bilan kirish (OTP)
@@ -95,20 +107,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Email/parol bilan kirish
   async function signInWithEmail(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error as Error | null }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      return { error: error as Error | null }
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error('Kirishda xatolik yuz berdi') }
+    }
   }
 
   // Email bilan ro'yxatdan o'tish
   async function signUpWithEmail(email: string, password: string, fullName: string, role = 'teacher') {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, role },
-      },
-    })
-    return { error: error as Error | null }
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName, role },
+        },
+      })
+      return { error: error as Error | null }
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error("Ro'yxatdan o'tishda xatolik yuz berdi") }
+    }
   }
 
   // Chiqish

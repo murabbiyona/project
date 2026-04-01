@@ -18,6 +18,18 @@ import {
 
 type AuthMode = 'login' | 'register' | 'phone' | 'otp'
 
+function getLocalizedError(message: string): string {
+  if (message === 'Failed to fetch') return "Serverga ulanib bo'lmadi. Internet aloqangizni tekshiring."
+  if (message.includes('Invalid login credentials')) return "Email yoki parol noto'g'ri."
+  if (message.includes('Email not confirmed')) return "Email tasdiqlanmagan. Pochtangizni tekshiring."
+  if (message.includes('User already registered')) return "Bu email allaqachon ro'yxatdan o'tgan."
+  if (message.includes('email rate limit exceeded')) return "Juda ko'p urinish. Biroz kutib, qaytadan urinib ko'ring."
+  if (message.includes('Database error')) return "Server xatoligi. Qaytadan urinib ko'ring."
+  if (message.includes('Password should be at least')) return "Parol kamida 6 ta belgidan iborat bo'lishi kerak."
+  if (message.includes('invalid')) return "Kiritilgan ma'lumotlar noto'g'ri. Tekshirib, qaytadan urinib ko'ring."
+  return message
+}
+
 export default function Login() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -38,21 +50,25 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    if (mode === 'register') {
-      const { error: err } = await signUpWithEmail(email, password, fullName)
-      if (err) {
-        setError(err.message)
+    try {
+      if (mode === 'register') {
+        const { error: err } = await signUpWithEmail(email, password, fullName)
+        if (err) {
+          setError(getLocalizedError(err.message))
+        } else {
+          setMode('login')
+          setError('')
+        }
       } else {
-        setMode('login')
-        setError('')
+        const { error: err } = await signInWithEmail(email, password)
+        if (err) {
+          setError(getLocalizedError(err.message))
+        } else {
+          navigate('/')
+        }
       }
-    } else {
-      const { error: err } = await signInWithEmail(email, password)
-      if (err) {
-        setError(err.message)
-      } else {
-        navigate('/')
-      }
+    } catch {
+      setError("Kutilmagan xatolik yuz berdi. Qaytadan urinib ko'ring.")
     }
     setLoading(false)
   }
