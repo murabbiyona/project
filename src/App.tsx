@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
+import AdminLayout from './layouts/AdminLayout';
+import ParentLayout from './layouts/ParentLayout';
 import Dashboard from './pages/Dashboard';
 import Classes from './pages/Classes';
 import Students from './pages/Students';
@@ -20,6 +22,13 @@ import AIPlanner from './pages/AIPlanner';
 import LiveAssessment from './pages/LiveAssessment';
 import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminTeachers from './pages/admin/AdminTeachers';
+import AdminStats from './pages/admin/AdminStats';
+import ParentDashboard from './pages/parent/ParentDashboard';
+import ParentGrades from './pages/parent/ParentGrades';
+import ParentAttendance from './pages/parent/ParentAttendance';
+import ParentMessages from './pages/parent/ParentMessages';
 import Login from './pages/Login';
 
 function App() {
@@ -28,7 +37,7 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
 
-      {/* Dashboard routes (authentication temporarily disabled) */}
+      {/* Murabbiyona — O'qituvchi dashboard */}
       <Route path="/" element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="classes" element={<Classes />} />
@@ -50,6 +59,21 @@ function App() {
         <Route path="feedback" element={<Feedback />} />
         <Route path="subscription" element={<Subscription />} />
         <Route path="classes/:className" element={<ClassDetail />} />
+      </Route>
+
+      {/* Bosh Murabbiy — Admin dashboard */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="teachers" element={<AdminTeachers />} />
+        <Route path="stats" element={<AdminStats />} />
+      </Route>
+
+      {/* Ota-ona portali */}
+      <Route path="/parent" element={<ParentLayout />}>
+        <Route index element={<ParentDashboard />} />
+        <Route path="grades" element={<ParentGrades />} />
+        <Route path="attendance" element={<ParentAttendance />} />
+        <Route path="messages" element={<ParentMessages />} />
       </Route>
     </Routes>
   );
