@@ -85,12 +85,12 @@ export default function Classes() {
   return (
     <div className="flex gap-6 h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Main Content */}
-      <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 shadow-sm flex flex-col overflow-hidden">
+      <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden">
         {/* Toolbar */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3 flex-1">
-            <GraduationCap className="w-5 h-5 text-slate-500" strokeWidth={1.5} />
-            <h1 className="text-xl font-bold text-slate-900">{t('classes.title')}</h1>
+            <GraduationCap className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+            <h1 className="text-xl font-bold text-foreground">{t('classes.title')}</h1>
           </div>
 
           {/* Search */}
