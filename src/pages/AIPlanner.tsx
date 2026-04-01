@@ -198,7 +198,7 @@ export default function AIPlanner() {
   const [configCollapsed, setConfigCollapsed] = useState(false);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4">
+    <div className="h-full flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div className="flex items-center gap-3">
@@ -241,7 +241,8 @@ export default function AIPlanner() {
               animate={{ width: 340, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="shrink-0 overflow-hidden"
+              className="shrink-0"
+              style={{ height: 'calc(100vh - 10rem)' }}
             >
               <div className="w-[340px] h-full flex flex-col gap-4 overflow-y-auto pr-2 pb-2">
           {/* Planning Model Selector */}
@@ -481,7 +482,7 @@ export default function AIPlanner() {
         </div>
 
         {/* ─── RIGHT SIDE: Chat & Result Panel ─── */}
-        <div className="flex-1 min-w-0 flex flex-col min-h-0 bg-card rounded-2xl border border-border overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col bg-card rounded-2xl border border-border overflow-hidden" style={{ height: 'calc(100vh - 10rem)' }}>
           {/* Tab Switcher */}
           <div className="flex shrink-0 border-b border-border">
             {[
