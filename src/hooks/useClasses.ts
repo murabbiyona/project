@@ -16,32 +16,39 @@ export function useClasses() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchClasses = useCallback(async () => {
-    if (!profile?.school_id) return
+    if (!profile?.school_id) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
 
-    const { data, error: err } = await supabase
-      .from('classes')
-      .select(`
-        *,
-        students(count),
-        lesson_plans(count),
-        assessments(count)
-      `)
-      .eq('school_id', profile.school_id)
-      .eq('is_active', true)
-      .order('name')
+    try {
+      const { data, error: err } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          students(count),
+          lesson_plans(count),
+          assessments(count)
+        `)
+        .eq('school_id', profile.school_id)
+        .eq('is_active', true)
+        .order('name')
 
-    if (err) {
-      setError(err.message)
-    } else {
-      const mapped = (data || []).map((c: any) => ({
-        ...c,
-        student_count: c.students?.[0]?.count || 0,
-        lesson_count: c.lesson_plans?.[0]?.count || 0,
-        assignment_count: c.assessments?.[0]?.count || 0,
-      }))
-      setClasses(mapped)
+      if (err) {
+        setError(err.message)
+      } else {
+        const mapped = (data || []).map((c: any) => ({
+          ...c,
+          student_count: c.students?.[0]?.count || 0,
+          lesson_count: c.lesson_plans?.[0]?.count || 0,
+          assignment_count: c.assessments?.[0]?.count || 0,
+        }))
+        setClasses(mapped)
+      }
+    } catch (e: any) {
+      setError(e.message || 'Xatolik yuz berdi')
     }
     setLoading(false)
   }, [profile?.school_id])

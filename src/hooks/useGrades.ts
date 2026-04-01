@@ -18,7 +18,7 @@ export function useGrades(classId?: string, subjectId?: string) {
   const [error, setError] = useState<string | null>(null)
 
   const fetchGrades = useCallback(async () => {
-    if (!user) return
+    if (!user) { setLoading(false); return }
     setLoading(true)
     setError(null)
 

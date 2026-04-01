@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
+import FloatingAssistant from '../components/ai/FloatingAssistant';
 
 export default function DashboardLayout() {
   return (
@@ -22,6 +23,7 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+      <FloatingAssistant />
     </div>
   );
 }

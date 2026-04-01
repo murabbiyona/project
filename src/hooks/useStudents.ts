@@ -10,7 +10,7 @@ export function useStudents(classId?: string) {
   const [error, setError] = useState<string | null>(null)
 
   const fetchStudents = useCallback(async () => {
-    if (!profile?.school_id) return
+    if (!profile?.school_id) { setLoading(false); return }
     setLoading(true)
     setError(null)
 

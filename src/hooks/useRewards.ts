@@ -30,7 +30,7 @@ export function useRewards(classId?: string) {
   }, [])
 
   const fetchRewards = useCallback(async () => {
-    if (!user) return
+    if (!user) { setLoading(false); return }
     setLoading(true)
 
     let query = supabase
