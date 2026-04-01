@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import {
   Mail,
   Lock,
@@ -44,11 +45,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
       if (mode === 'register') {
@@ -56,8 +59,15 @@ export default function Login() {
         if (err) {
           setError(getLocalizedError(err.message))
         } else {
-          setMode('login')
-          setError('')
+          // Agar session bor bo'lsa — avtomatik kirish
+          // Agar yo'q bo'lsa — email tasdiqlash kerak
+          const { data: { session: currentSession } } = await supabase.auth.getSession()
+          if (currentSession) {
+            navigate('/')
+          } else {
+            setSuccess("Muvaffaqiyatli ro'yxatdan o'tdingiz! Endi shu email va parol bilan kiring.")
+            setMode('login')
+          }
         }
       } else {
         const { error: err } = await signInWithEmail(email, password)
@@ -218,6 +228,16 @@ export default function Login() {
                       {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                     </button>
                   </div>
+
+                  {success && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-emerald-400/90 text-sm bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2"
+                    >
+                      {success}
+                    </motion.p>
+                  )}
 
                   {error && (
                     <motion.p

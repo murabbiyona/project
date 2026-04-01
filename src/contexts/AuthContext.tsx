@@ -118,14 +118,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Email bilan ro'yxatdan o'tish
   async function signUpWithEmail(email: string, password: string, fullName: string, role = 'teacher') {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: { full_name: fullName, role },
         },
       })
-      return { error: error as Error | null }
+
+      if (error) return { error: error as Error | null }
+
+      // Agar foydalanuvchi yaratilgan bo'lsa, profilni ham yaratamiz
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: fullName,
+          role,
+          email,
+        }, { onConflict: 'id' })
+
+        // Agar email confirmation kerak bo'lmasa, avtomatik login
+        if (data.session) {
+          setSession(data.session)
+          setUser(data.user)
+          await fetchProfile(data.user.id)
+        }
+      }
+
+      return { error: null }
     } catch (err) {
       return { error: err instanceof Error ? err : new Error("Ro'yxatdan o'tishda xatolik yuz berdi") }
     }
