@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Bell, X, Circle, Globe, Sun, Moon } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -11,7 +11,20 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
   const location = useLocation();
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -50,14 +63,26 @@ export default function Header() {
           {/* Right Icons - 1x1 size match */}
           <div className="flex items-center justify-end gap-4 shrink-0">
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setShowSearch(true)} 
-                className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer"
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#e8edda] dark:hover:bg-[#3a3a2e] transition-all duration-300 cursor-pointer group"
+                title={darkMode ? 'Dark mode' : 'Light mode'}
+              >
+                {darkMode ? (
+                  <Moon className="size-5 text-[#a0b070] group-hover:text-[#8b9a5b] group-hover:rotate-[-20deg] transition-all duration-500" strokeWidth={2} />
+                ) : (
+                  <Sun className="size-5 text-[#a0b070] group-hover:text-[#8b9a5b] group-hover:rotate-180 transition-all duration-500" strokeWidth={2} />
+                )}
+              </button>
+
+              <button
+                onClick={() => setShowSearch(true)}
+                className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#e8edda] dark:hover:bg-[#3a3a2e] transition-all duration-300 cursor-pointer group"
               >
                 <Search className="size-5 text-muted-foreground dark:text-[#a3b18a]" strokeWidth={2} />
               </button>
-              
-              <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer">
+
+              <button className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#e8edda] dark:hover:bg-[#3a3a2e] transition-all duration-300 cursor-pointer group">
                 <div className="relative">
                   <Bell className="size-5 text-muted-foreground dark:text-[#a3b18a]" strokeWidth={2} />
                   <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-card">
@@ -79,9 +104,9 @@ export default function Header() {
               </button>
 
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setShowLangMenu(!showLangMenu)}
-                  className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors cursor-pointer"
+                  className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#e8edda] dark:hover:bg-[#3a3a2e] transition-all duration-300 cursor-pointer group"
                 >
                   <Globe className="size-5 text-muted-foreground dark:text-[#a3b18a]" strokeWidth={2} />
                   <span className="absolute -bottom-0.5 -right-0.5 text-[10px] ring-1 ring-card rounded-full bg-card p-0">🇺🇸</span>
@@ -103,7 +128,7 @@ export default function Header() {
               </div>
             </div>
 
-            <button className="rounded-full p-0.5 hover:bg-accent transition-colors size-auto outline-none">
+            <button className="rounded-full p-0.5 hover:bg-accent transition-all duration-300 hover:scale-110 size-auto outline-none">
               <div className="relative flex shrink-0 overflow-hidden rounded-full size-8">
                 <div className="flex size-full items-center justify-center rounded-full bg-zinc-900 text-white text-sm font-semibold">
                   {profile ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
