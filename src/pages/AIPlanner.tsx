@@ -16,14 +16,10 @@ import {
   Users,
   ChevronDown,
 } from 'lucide-react';
+import { useLessonPlanner, type PlanningModel as PlanningModelType, type BloomLevel } from '../hooks/useLessonPlanner';
+import { useAIChat } from '../hooks/useAIChat';
 
 // ── Types ──────────────────────────────────────────────────────────────
-interface ChatMessage {
-  id: number;
-  role: 'user' | 'ai';
-  text: string;
-}
-
 interface PlanningModel {
   id: string;
   title: string;
@@ -38,7 +34,7 @@ interface PlanningModel {
 // ── Constants ──────────────────────────────────────────────────────────
 const PLANNING_MODELS: PlanningModel[] = [
   {
-    id: '5e',
+    id: '5E',
     title: '5E Model',
     subtitle: 'Engage, Explore, Explain, Elaborate, Evaluate',
     color: 'text-emerald-400',
@@ -48,7 +44,7 @@ const PLANNING_MODELS: PlanningModel[] = [
     icon: <Lightbulb className="size-5" />,
   },
   {
-    id: 'smart',
+    id: 'SMART',
     title: 'SMART Model',
     subtitle: 'Specific, Measurable, Achievable, Relevant, Time-bound',
     color: 'text-blue-400',
@@ -58,7 +54,7 @@ const PLANNING_MODELS: PlanningModel[] = [
     icon: <Target className="size-5" />,
   },
   {
-    id: '2080',
+    id: '20/80',
     title: '20/80 Model',
     subtitle: "20% nazariya, 80% amaliyot",
     color: 'text-purple-400',
@@ -68,7 +64,7 @@ const PLANNING_MODELS: PlanningModel[] = [
     icon: <Zap className="size-5" />,
   },
   {
-    id: 'backward',
+    id: 'backward_design',
     title: 'Backward Design',
     subtitle: "Natijadan boshlab rejalashtirish",
     color: 'text-amber-400',
@@ -82,75 +78,43 @@ const PLANNING_MODELS: PlanningModel[] = [
 const CLASSES = ['5-A', '5-B', '6-A', '6-B', '7-A', '7-B'];
 
 const BLOOM_LEVELS = [
-  { label: 'Eslash', color: 'bg-red-500/15 text-red-400 border-red-500/25' },
-  { label: 'Tushunish', color: 'bg-orange-500/15 text-orange-400 border-orange-500/25' },
-  { label: "Qo'llash", color: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25' },
-  { label: 'Tahlil', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' },
-  { label: 'Sintez', color: 'bg-blue-500/15 text-blue-400 border-blue-500/25' },
-  { label: 'Baholash', color: 'bg-purple-500/15 text-purple-400 border-purple-500/25' },
+  { label: 'remember', displayName: 'Eslash', color: 'bg-red-500/15 text-red-400 border-red-500/25' },
+  { label: 'understand', displayName: 'Tushunish', color: 'bg-orange-500/15 text-orange-400 border-orange-500/25' },
+  { label: 'apply', displayName: "Qo'llash", color: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25' },
+  { label: 'analyze', displayName: 'Tahlil', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' },
+  { label: 'evaluate', displayName: 'Baholash', color: 'bg-blue-500/15 text-blue-400 border-blue-500/25' },
+  { label: 'create', displayName: 'Ijod etish', color: 'bg-purple-500/15 text-purple-400 border-purple-500/25' },
 ];
 
 const DURATIONS = [35, 40, 45, 80];
 
-const MOCK_PLAN = {
-  title: "Pythagor teoremasi",
-  model: "5E Model",
-  duration: "45 daqiqa",
-  sections: [
-    {
-      name: "Jalb qilish (Engage)",
-      time: "5 daqiqa",
-      content: "O'quvchilarga real hayotdan to'g'ri burchakli uchburchak misollarini ko'rsating. Qurilish, navigatsiya va sport sohasidagi misollar orqali qiziqtiring.",
-    },
-    {
-      name: "Tadqiq qilish (Explore)",
-      time: "12 daqiqa",
-      content: "O'quvchilar guruhlarda ishlaydi. Har bir guruhga turli o'lchamdagi to'g'ri burchakli uchburchaklar beriladi. Tomonlarni o'lchab, kvadratlarini hisoblab, qonuniyatni topishga harakat qilishadi.",
-    },
-    {
-      name: "Tushuntirish (Explain)",
-      time: "10 daqiqa",
-      content: "a\u00B2 + b\u00B2 = c\u00B2 formulasini rasmiy tarzda taqdim eting. Vizual isbotni ko'rsating. Asosiy tushunchalarni mustahkamlang.",
-    },
-    {
-      name: "Kengaytirish (Elaborate)",
-      time: "13 daqiqa",
-      content: "Murakkabroq masalalarni yeching: masofa hisoblash, koordinatalar tekisligida qo'llash. Juft-juft ishlash.",
-    },
-    {
-      name: "Baholash (Evaluate)",
-      time: "5 daqiqa",
-      content: "Qisqa mustaqil ish: 3 ta masala. O'z-o'zini baholash varaqasi. Refleksiya savollari.",
-    },
-  ],
-};
-
 // ── Component ──────────────────────────────────────────────────────────
 export default function AIPlanner() {
+  // Real AI hooks
+  const { generatePlan, generatedPlan, loading: planLoading, error: planError } = useLessonPlanner();
+  const {
+    messages: chatMessages,
+    sendMessage,
+    loading: chatLoading,
+    error: chatError,
+    credits
+  } = useAIChat({
+    contextType: 'lesson_plan',
+    systemPrompt: 'Sen O\'zbekiston maktablari uchun dars rejalashtirish bo\'yicha AI yordamchisisisan. Murabbiylarning savollariga qisqa va amaliy javoblar ber.',
+  });
+
   // Config state
-  const [selectedModel, setSelectedModel] = useState<string>('5e');
+  const [selectedModel, setSelectedModel] = useState<string>('5E');
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [selectedBlooms, setSelectedBlooms] = useState<string[]>([]);
   const [duration, setDuration] = useState<number>(45);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // Right panel state
   const [activeTab, setActiveTab] = useState<'chat' | 'plan'>('chat');
   const [chatInput, setChatInput] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      role: 'ai',
-      text: "Assalomu alaykum! Men sizning AI dars rejalashtirish yordamchingizman. Mavzu va parametrlarni tanlang, men sizga professional dars reja tayyorlab beraman. \ud83d\udcda",
-    },
-  ]);
-  const [showPlan, setShowPlan] = useState(false);
-
-  // Credits
-  const credits = 100;
 
   const toggleBloom = (label: string) => {
     setSelectedBlooms((prev) =>
@@ -158,49 +122,39 @@ export default function AIPlanner() {
     );
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!chatInput.trim()) return;
-    const newMsg: ChatMessage = { id: Date.now(), role: 'user', text: chatInput };
-    setMessages((prev) => [...prev, newMsg]);
+    await sendMessage(chatInput);
     setChatInput('');
-
-    // Mock AI response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          role: 'ai',
-          text: "Tushundim! Sizning so'rovingiz bo'yicha dars rejasini tayyorlayapman. Iltimos, chap paneldan barcha parametrlarni to'ldiring va \"Dars reja yaratish\" tugmasini bosing.",
-        },
-      ]);
-    }, 1000);
   };
 
-  const handleGenerate = () => {
-    setIsGenerating(true);
-    // Mock generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      setShowPlan(true);
+  const handleGenerate = async () => {
+    if (!topic.trim() || !selectedClass) {
+      alert('Iltimos, mavzu va sinfni tanlang');
+      return;
+    }
+
+    await generatePlan({
+      classId: selectedClass,
+      subjectId: subject || 'general',
+      topic: topic.trim(),
+      planningModel: selectedModel as PlanningModelType,
+      bloomLevel: selectedBlooms.length > 0 ? (selectedBlooms[0] as BloomLevel) : undefined,
+      duration,
+    });
+
+    // Show plan tab after generation
+    if (generatedPlan) {
       setActiveTab('plan');
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          role: 'ai',
-          text: "Dars reja tayyor! \"Dars reja\" tabiga o'ting ko'rish uchun. \u2728",
-        },
-      ]);
-    }, 2500);
+    }
   };
 
   const [configCollapsed, setConfigCollapsed] = useState(false);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4">
+    <div className="h-full flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4 overflow-hidden">
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-6 shrink-0">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20">
             <Brain className="size-6 text-emerald-500" />
@@ -232,7 +186,7 @@ export default function AIPlanner() {
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 min-h-0 flex gap-5">
+      <div className="flex-1 min-h-0 flex gap-5 overflow-hidden">
         {/* ─── LEFT SIDE: Configuration Panel ─── */}
         <AnimatePresence initial={false}>
           {!configCollapsed && (
@@ -241,30 +195,30 @@ export default function AIPlanner() {
               animate={{ width: 340, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="shrink-0 overflow-hidden"
+              className="shrink-0 h-full overflow-hidden"
             >
-              <div className="w-[340px] h-full flex flex-col gap-4 overflow-y-auto pr-2 pb-2">
+              <div className="w-[340px] h-full flex flex-col gap-3 overflow-y-auto pr-2 pb-4 scrollbar-hide">
           {/* Planning Model Selector */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
               Rejalashtirish modeli
             </label>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               {PLANNING_MODELS.map((model) => (
                 <motion.button
                   key={model.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedModel(model.id)}
-                  className={`relative p-3.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
+                  className={`relative p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
                     selectedModel === model.id
                       ? `${model.bg} ${model.border} ring-2 ${model.ring}`
                       : 'bg-card border-border hover:bg-muted/50'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
+                  <div className="flex items-center gap-2 mb-1">
                     <div
-                      className={`p-1.5 rounded-lg ${
+                      className={`p-1 rounded-lg ${
                         selectedModel === model.id ? model.bg : 'bg-muted'
                       }`}
                     >
@@ -273,14 +227,14 @@ export default function AIPlanner() {
                       </span>
                     </div>
                     <span
-                      className={`text-sm font-bold ${
+                      className={`text-xs font-bold ${
                         selectedModel === model.id ? model.color : 'text-foreground'
                       }`}
                     >
                       {model.title}
                     </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
+                  <p className="text-[10px] text-muted-foreground leading-snug line-clamp-1">
                     {model.subtitle}
                   </p>
                   {selectedModel === model.id && (
@@ -372,88 +326,93 @@ export default function AIPlanner() {
 
           {/* Bloom's Taxonomy */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 block">
-              Blum taksonomiyasi darajasi
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              Blum taksonomiyasi
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {BLOOM_LEVELS.map((level) => (
-                <motion.button
+                <button
                   key={level.label}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => toggleBloom(level.label)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
                     selectedBlooms.includes(level.label)
                       ? level.color
-                      : 'bg-muted/40 text-muted-foreground border-transparent'
+                      : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted'
                   }`}
                 >
-                  {level.label}
-                </motion.button>
+                  {level.displayName}
+                </button>
               ))}
             </div>
           </div>
 
           {/* Duration Selector */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
               <Clock className="size-3.5 inline mr-1.5 -mt-0.5" />
               Dars davomiyligi
             </label>
             <div className="flex gap-2">
               {DURATIONS.map((d) => (
-                <motion.button
+                <button
                   key={d}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setDuration(d)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
                     duration === d
                       ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30 ring-2 ring-emerald-500/20'
                       : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
                   }`}
                 >
                   {d} daq
-                </motion.button>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Generate Button */}
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="relative w-full py-3.5 rounded-xl font-bold text-white text-[15px] bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              {isGenerating ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <Sparkles className="size-5" />
-                  </motion.div>
-                  Yaratilmoqda...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="size-5" />
-                  Dars reja yaratish
-                </>
+          {/* Error display */}
+          {planError && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-600">
+              {planError}
+            </div>
+          )}
+
+          {/* Generate Button — sticky at the bottom */}
+          <div className="sticky bottom-0 pt-2 pb-1 bg-background/80 backdrop-blur-sm">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleGenerate}
+              disabled={planLoading}
+              className="relative w-full py-3 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {planLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Sparkles className="size-4" />
+                    </motion.div>
+                    Yaratilmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-4" />
+                    Dars reja yaratish
+                  </>
+                )}
+              </span>
+              {/* Shimmer effect */}
+              {!planLoading && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
+                />
               )}
-            </span>
-            {/* Shimmer effect */}
-            {!isGenerating && (
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
-              />
-            )}
-          </motion.button>
+            </motion.button>
+          </div>
               </div>
             </motion.div>
           )}
@@ -505,7 +464,7 @@ export default function AIPlanner() {
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-indigo-500"
                   />
                 )}
-                {tab.key === 'plan' && showPlan && (
+                {tab.key === 'plan' && generatedPlan && (
                   <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 )}
               </button>
@@ -525,35 +484,69 @@ export default function AIPlanner() {
                 >
                   {/* Messages Area */}
                   <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
-                    {messages.map((msg) => (
-                      <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`flex items-start gap-3 ${
-                          msg.role === 'user' ? 'flex-row-reverse' : ''
-                        }`}
-                      >
-                        {msg.role === 'ai' && (
-                          <div className="shrink-0 size-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 flex items-center justify-center">
-                            <Sparkles className="size-4 text-emerald-500" />
-                          </div>
-                        )}
-                        <div
-                          className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                            msg.role === 'user'
-                              ? 'bg-gradient-to-r from-emerald-500 to-indigo-500 text-white rounded-br-md'
-                              : 'bg-muted/60 text-foreground rounded-bl-md'
+                    {chatMessages.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center text-muted-foreground">
+                          <MessageSquare className="size-12 mx-auto mb-3 opacity-30" />
+                          <p className="text-sm">Assalomu alaykum! Dars reja haqida savol bering.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      chatMessages.map((msg) => (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`flex items-start gap-3 ${
+                            msg.role === 'user' ? 'flex-row-reverse' : ''
                           }`}
                         >
-                          {msg.text}
+                          {msg.role === 'assistant' && (
+                            <div className="shrink-0 size-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 flex items-center justify-center">
+                              <Sparkles className="size-4 text-emerald-500" />
+                            </div>
+                          )}
+                          <div
+                            className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                              msg.role === 'user'
+                                ? 'bg-gradient-to-r from-emerald-500 to-indigo-500 text-white rounded-br-md'
+                                : 'bg-muted/60 text-foreground rounded-bl-md'
+                            }`}
+                          >
+                            {msg.content}
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                    {chatLoading && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-start gap-3"
+                      >
+                        <div className="shrink-0 size-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 flex items-center justify-center">
+                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
+                            <Sparkles className="size-4 text-emerald-500" />
+                          </motion.div>
+                        </div>
+                        <div className="bg-muted/60 px-4 py-3 rounded-2xl rounded-bl-md">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
                         </div>
                       </motion.div>
-                    ))}
+                    )}
                   </div>
 
                   {/* Chat Input */}
                   <div className="shrink-0 p-4 border-t border-border">
+                    {chatError && (
+                      <div className="mb-2 p-2 text-xs text-red-600 bg-red-500/10 rounded-lg">
+                        {chatError}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -567,7 +560,8 @@ export default function AIPlanner() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSendMessage}
-                        className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-500 text-white hover:from-emerald-600 hover:to-indigo-600 transition-all cursor-pointer"
+                        disabled={chatLoading || !chatInput.trim()}
+                        className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-500 text-white hover:from-emerald-600 hover:to-indigo-600 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Send className="size-4" />
                       </motion.button>
@@ -582,7 +576,7 @@ export default function AIPlanner() {
                   exit={{ opacity: 0, x: 20 }}
                   className="flex-1 min-h-0 flex flex-col"
                 >
-                  {showPlan ? (
+                  {generatedPlan ? (
                     <>
                       {/* Plan Content */}
                       <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
@@ -591,16 +585,16 @@ export default function AIPlanner() {
                           <div className="flex items-start justify-between">
                             <div>
                               <h2 className="text-lg font-bold text-foreground mb-1">
-                                {MOCK_PLAN.title}
+                                {generatedPlan.title}
                               </h2>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                                 <span className="flex items-center gap-1">
                                   <Lightbulb className="size-3.5 text-emerald-500" />
-                                  {MOCK_PLAN.model}
+                                  {generatedPlan.planning_model}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="size-3.5 text-indigo-500" />
-                                  {MOCK_PLAN.duration}
+                                  {generatedPlan.duration} daqiqa
                                 </span>
                                 {selectedClass && (
                                   <span className="flex items-center gap-1">
@@ -619,28 +613,43 @@ export default function AIPlanner() {
                           </div>
                         </div>
 
-                        {/* Plan Sections */}
-                        {MOCK_PLAN.sections.map((section, idx) => (
-                          <motion.div
-                            key={section.name}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="rounded-xl bg-card border border-border p-4 hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex items-center justify-between mb-2.5">
-                              <h3 className="text-sm font-bold text-foreground">
-                                {section.name}
-                              </h3>
-                              <span className="text-xs font-medium text-muted-foreground px-2.5 py-1 rounded-lg bg-muted">
-                                {section.time}
-                              </span>
+                        {/* Plan Structure Display */}
+                        <div className="space-y-3">
+                          {generatedPlan.lesson_structure && typeof generatedPlan.lesson_structure === 'object' && (
+                            <div>
+                              {Object.entries(generatedPlan.lesson_structure).map(([key, value]: [string, any]) => (
+                                <motion.div
+                                  key={key}
+                                  initial={{ opacity: 0, y: 15 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="rounded-xl bg-card border border-border p-4 hover:shadow-md transition-shadow mb-3"
+                                >
+                                  <h3 className="text-sm font-bold text-foreground mb-2 capitalize">
+                                    {key.replace(/_/g, ' ')}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                    {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+                                  </p>
+                                </motion.div>
+                              ))}
                             </div>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {section.content}
-                            </p>
-                          </motion.div>
-                        ))}
+                          )}
+                        </div>
+
+                        {/* Objectives */}
+                        {generatedPlan.objectives && generatedPlan.objectives.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-bold text-foreground mb-3">Maqsadlar</h3>
+                            <div className="space-y-2">
+                              {generatedPlan.objectives.map((obj: string, idx: number) => (
+                                <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/40">
+                                  <span className="text-xs font-semibold text-emerald-500 mt-0.5">✓</span>
+                                  <span className="text-sm text-foreground">{obj}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Export Button */}
