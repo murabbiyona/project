@@ -95,20 +95,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Email/parol bilan kirish
   async function signInWithEmail(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error as Error | null }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      return { error: error as Error | null }
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error('Kirishda xatolik yuz berdi') }
+    }
   }
 
   // Email bilan ro'yxatdan o'tish
   async function signUpWithEmail(email: string, password: string, fullName: string, role = 'teacher') {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, role },
-      },
-    })
-    return { error: error as Error | null }
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName, role },
+        },
+      })
+      return { error: error as Error | null }
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error("Ro'yxatdan o'tishda xatolik yuz berdi") }
+    }
   }
 
   // Chiqish
