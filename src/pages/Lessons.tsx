@@ -59,34 +59,6 @@ export default function Lessons() {
   const selectedClassInfo = CLASSES.find(c => c.name === activeClass)!;
   const selectedUnitObj = UNITS.find(u => u.id === activeUnit);
   
-  const colorName = selectedClassInfo?.colorName || 'slate';
-  
-  const getDynamicColorClasses = (isActive: boolean) => {
-    if (!isActive) return 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-md';
-    switch(colorName) {
-      case 'amber': return 'border-amber-400 bg-amber-50/30 shadow-md ring-4 ring-amber-400/10';
-      case 'rose': return 'border-rose-400 bg-rose-50/30 shadow-md ring-4 ring-rose-400/10';
-      case 'orange': return 'border-orange-400 bg-orange-50/30 shadow-md ring-4 ring-orange-400/10';
-      case 'emerald': return 'border-emerald-400 bg-emerald-50/30 shadow-md ring-4 ring-emerald-400/10';
-      case 'cyan': return 'border-cyan-400 bg-cyan-50/30 shadow-md ring-4 ring-cyan-400/10';
-      case 'sky': return 'border-sky-400 bg-sky-50/30 shadow-md ring-4 ring-sky-400/10';
-      case 'blue': return 'border-blue-400 bg-blue-50/30 shadow-md ring-4 ring-blue-400/10';
-      case 'indigo': return 'border-indigo-400 bg-indigo-50/30 shadow-md ring-4 ring-indigo-400/10';
-      case 'purple': return 'border-purple-400 bg-purple-50/30 shadow-md ring-4 ring-purple-400/10';
-      default: return 'border-slate-400 bg-slate-50/30 shadow-md ring-4 ring-slate-400/10';
-    }
-  };
-
-  const getDynamicIconBg = (isActive: boolean) => {
-    if (!isActive) return 'bg-slate-50 border-slate-100/50 text-slate-400';
-    switch(colorName) {
-      case 'amber': return 'bg-amber-100/60 border-amber-200/50 text-amber-500';
-      case 'rose': return 'bg-rose-100/60 border-rose-200/50 text-rose-500';
-      case 'orange': return 'bg-orange-100/60 border-orange-200/50 text-orange-500';
-      case 'emerald': return 'bg-emerald-100/60 border-emerald-200/50 text-emerald-500';
-      default: return 'bg-slate-100 border-slate-200/50 text-slate-500';
-    }
-  };
 
   return (
     <div className="flex h-full overflow-hidden gap-4 p-6 lg:p-8 scrollbar-hide">
