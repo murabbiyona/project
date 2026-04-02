@@ -6,7 +6,8 @@ import {
   Strikethrough, List, ListOrdered, Code, Minus, Link2,
   Image as ImageIcon, Video, File, Sliders, Clock, Target,
   Loader2, Search, RefreshCw, Send, Copy, BookOpen, Sparkles,
-  AlertCircle, FileSpreadsheet
+  AlertCircle, FileSpreadsheet, Bell, History, Users, BarChart3,
+  CalendarDays, Shield, Mail
 } from 'lucide-react';
 import { useCurriculum } from '../contexts/CurriculumContext';
 import { supabase } from '../lib/supabase';
@@ -173,13 +174,13 @@ function MiniCalendar({
           <div className={`w-4 h-4 rounded-[4px] border-2 flex items-center justify-center transition-colors ${useClassSchedule ? 'bg-slate-900 border-slate-900' : 'border-slate-300'}`}>
             {useClassSchedule && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
           </div>
-          <span className="text-[13px] font-semibold text-slate-700">Use Class Schedule</span>
+          <span className="text-[13px] font-semibold text-slate-700">Sinf jadvalidan foydalanish</span>
         </button>
 
         {/* Available Times (when Use Class Schedule is ON) */}
         {useClassSchedule && selectedClassData.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Available Times</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mavjud vaqtlar</p>
             {selectedClassData.map(cls => (
               <button
                 key={cls.name}
@@ -214,10 +215,10 @@ function MiniCalendar({
             {/* Start time */}
             <div className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-[13px] font-medium text-slate-600 w-20 shrink-0">Start time</span>
+              <span className="text-[13px] font-medium text-slate-600 w-20 shrink-0">Boshlanish</span>
               <div className="relative flex-1">
                 <button onClick={() => { setShowStartDrop(!showStartDrop); setShowEndDrop(false); }} className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-600 hover:border-slate-300 transition-colors">
-                  <span className={customStart ? 'text-slate-900' : 'text-slate-400'}>{customStart || 'Select'}</span>
+                  <span className={customStart ? 'text-slate-900' : 'text-slate-400'}>{customStart || 'Tanlang'}</span>
                   <ChevronDown className="w-3 h-3 text-slate-400" />
                 </button>
                 {showStartDrop && (
@@ -231,10 +232,10 @@ function MiniCalendar({
             {/* End time */}
             <div className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-[13px] font-medium text-slate-600 w-20 shrink-0">End time</span>
+              <span className="text-[13px] font-medium text-slate-600 w-20 shrink-0">Tugash</span>
               <div className="relative flex-1">
                 <button onClick={() => { setShowEndDrop(!showEndDrop); setShowStartDrop(false); }} className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-600 hover:border-slate-300 transition-colors">
-                  <span className={customEnd ? 'text-slate-900' : 'text-slate-400'}>{customEnd || 'Select'}</span>
+                  <span className={customEnd ? 'text-slate-900' : 'text-slate-400'}>{customEnd || 'Tanlang'}</span>
                   <ChevronDown className="w-3 h-3 text-slate-400" />
                 </button>
                 {showEndDrop && (
@@ -251,13 +252,13 @@ function MiniCalendar({
       {/* Footer */}
       <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-100">
         <button onClick={onClose} className="px-4 py-2 text-[13px] font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-          Cancel
+          Bekor qilish
         </button>
         <button
           onClick={handleAdd}
           className="px-5 py-2 text-[13px] font-bold text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
         >
-          Add
+          Qo'shish
         </button>
       </div>
     </div>
@@ -267,8 +268,10 @@ function MiniCalendar({
 // ─── Details Panel ─────────────────────────────────────────────────────────────
 function DetailsPanel({
   onScheduleChange,
+  onClose,
 }: {
   onScheduleChange: (hasSchedule: boolean) => void;
+  onClose: () => void;
 }) {
   const [showClassDropdown, setShowClassDropdown] = useState(false);
   const [selectedClasses, setSelectedClasses] = useState<string[]>(['9-B', '9-A']);
@@ -313,14 +316,17 @@ function DetailsPanel({
       {/* Header */}
       <div className="px-5 py-4 flex items-center gap-2.5 shrink-0 border-b border-slate-100">
         <Sliders className="w-4 h-4 text-slate-500" />
-        <h2 className="text-[15px] font-extrabold text-slate-900 tracking-tight">Details</h2>
+        <h2 className="text-[15px] font-extrabold text-slate-900 tracking-tight flex-1">Tafsilotlar</h2>
+        <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
 
-        {/* CLASSES */}
+        {/* SINFLAR */}
         <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">CLASSES</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">SINFLAR</span>
           <div className="relative">
             <button
               onClick={() => setShowClassDropdown(!showClassDropdown)}
@@ -333,7 +339,7 @@ function DetailsPanel({
                   </div>
                 ))}
                 <span className="text-[13px] font-bold text-slate-700 ml-1">
-                  {selectedClasses.length} class{selectedClasses.length !== 1 ? 'es' : ''}
+                  {selectedClasses.length} ta sinf
                 </span>
               </div>
               <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showClassDropdown ? 'rotate-180' : ''}`} />
@@ -346,7 +352,7 @@ function DetailsPanel({
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors"
                 >
                   <div className="w-4 h-4 rounded-full border-2 border-slate-300 bg-slate-100"></div>
-                  <span className="text-[13px] font-medium text-slate-500">No Class</span>
+                  <span className="text-[13px] font-medium text-slate-500">Sinfsiz</span>
                 </button>
                 {CLASSES_DATA.map(cls => (
                   <button
@@ -373,7 +379,7 @@ function DetailsPanel({
         {/* UNITS */}
         {selectedClasses.length > 0 && (
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">UNITS</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">BO'LIMLAR</span>
             <div className="space-y-2">
               {selectedClasses.map(className => {
                 const isOpen = openUnitAccordion === className;
@@ -389,7 +395,7 @@ function DetailsPanel({
                       <div className={`w-2 h-2 rounded-full ${getClassDot(className)} shrink-0`}></div>
                       <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider w-10 shrink-0">{className}</span>
                       <span className="flex-1 text-left text-[13px] font-bold text-slate-700 truncate">
-                        {selectedUnit ? `${selectedUnit.number}. ${selectedUnit.title}` : 'Select unit...'}
+                        {selectedUnit ? `${selectedUnit.number}. ${selectedUnit.title}` : 'Bo\'limni tanlang...'}
                       </span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
@@ -400,7 +406,7 @@ function DetailsPanel({
                           onClick={() => { setClassUnits(prev => ({ ...prev, [className]: '' })); setOpenUnitAccordion(null); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-100/50 transition-colors"
                         >
-                          <span className="text-[13px] font-medium text-slate-500 pl-5">No unit</span>
+                          <span className="text-[13px] font-medium text-slate-500 pl-5">Bo'limsiz</span>
                         </button>
                         {UNITS.map(unit => (
                           <button
@@ -430,7 +436,7 @@ function DetailsPanel({
 
         {/* SCHEDULE */}
         <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">SCHEDULE</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">JADVAL</span>
 
           {/* Schedule Cards */}
           {scheduleEntries.map(entry => (
@@ -471,7 +477,7 @@ function DetailsPanel({
               className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-slate-200 rounded-[14px] text-[13px] font-bold text-slate-400 hover:border-slate-300 hover:text-slate-600 hover:bg-slate-50/50 transition-colors"
             >
               <Calendar className="w-4 h-4" />
-              {scheduleEntries.length > 0 ? 'Add another date' : 'Add a date'}
+              {scheduleEntries.length > 0 ? 'Yana sana qo\'shish' : 'Sana qo\'shish'}
             </button>
             {showCalendar && (
               <MiniCalendar
@@ -485,7 +491,7 @@ function DetailsPanel({
 
         {/* STANDARDS */}
         <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">STANDARDS</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3">STANDARTLAR</span>
           {standards.map((std, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3 bg-white border border-slate-100 rounded-[14px] shadow-sm mb-2">
               <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
@@ -499,7 +505,7 @@ function DetailsPanel({
           ))}
           <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[13px] font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-[14px] transition-colors border border-dashed border-slate-200">
             <Target className="w-4 h-4" />
-            Manage Standards
+            Standartlarni boshqarish
           </button>
         </div>
 
@@ -548,8 +554,8 @@ function StandardsPanel({ onClose }: { onClose: () => void }) {
           <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
         </svg>
         <h2 className="font-extrabold text-slate-900 text-[15px] tracking-tight flex-1">
-          Standards
-          {tagCount > 0 && <span className="ml-2 text-[11px] font-bold text-slate-400">{tagCount} tagged</span>}
+          Standartlar
+          {tagCount > 0 && <span className="ml-2 text-[11px] font-bold text-slate-400">{tagCount} ta belgilangan</span>}
         </h2>
         <button onClick={() => setShowSearch(!showSearch)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
           <Search className="w-3.5 h-3.5" />
@@ -568,7 +574,7 @@ function StandardsPanel({ onClose }: { onClose: () => void }) {
             autoFocus
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search standards..."
+            placeholder="Standartlarni qidirish..."
             className="w-full text-[13px] font-medium px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-slate-400 transition-colors"
           />
         </div>
@@ -585,7 +591,7 @@ function StandardsPanel({ onClose }: { onClose: () => void }) {
             <div className="flex-1 text-left">
               <p className="text-[13px] font-extrabold text-slate-800">Informatika (9-sinf)</p>
               <p className="text-[11px] font-medium text-slate-400">
-                {ALL_STANDARDS.length} standards{tagCount > 0 ? ` · ${tagCount} tagged` : ''}
+                {ALL_STANDARDS.length} ta standart{tagCount > 0 ? ` · ${tagCount} ta belgilangan` : ''}
               </p>
             </div>
             {/* Class pills */}
@@ -625,7 +631,7 @@ function StandardsPanel({ onClose }: { onClose: () => void }) {
                       <div className="flex items-center gap-2">
                         <span className="text-[13px] font-extrabold text-slate-800">{std.code}</span>
                         {isTagged && (
-                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">Tagged</span>
+                          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">Belgilangan</span>
                         )}
                       </div>
                       <p className="text-[12px] font-medium text-slate-500 truncate">{std.desc}</p>
@@ -637,12 +643,12 @@ function StandardsPanel({ onClose }: { onClose: () => void }) {
                         <p className="text-[12px] font-extrabold text-slate-800 mb-0.5">{std.code}</p>
                         <p className="text-[11px] text-slate-500 mb-3">{std.desc}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-400">Taught</span>
+                          <span className="text-[11px] font-bold text-slate-400">O'tilgan</span>
                           <button
                             onClick={() => setTagged(prev => prev.filter(c => c !== std.code))}
                             className="text-[11px] font-bold text-rose-500 hover:text-rose-600 transition-colors"
                           >
-                            Remove
+                            O'chirish
                           </button>
                         </div>
                       </div>
@@ -789,7 +795,7 @@ Jami vaqt ${duration} daqiqaga teng bo'lishi kerak.`;
       {/* Header */}
       <div className="px-4 py-3 flex items-center gap-2 border-b border-slate-100 shrink-0">
         <Sparkles className="w-4 h-4 text-violet-500 shrink-0" />
-        <h2 className="font-extrabold text-slate-900 text-[15px] tracking-tight flex-1">AI Assistant</h2>
+        <h2 className="font-extrabold text-slate-900 text-[15px] tracking-tight flex-1">AI yordamchisi</h2>
         <button className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
@@ -864,7 +870,7 @@ Jami vaqt ${duration} daqiqaga teng bo'lishi kerak.`;
               <input
                 value={prompt}
                 onChange={e => setPrompt(e.target.value)}
-                placeholder="Dars haqida savol bering..."
+                placeholder="Dars haqida so'rang..."
                 className="flex-1 text-[13px] font-medium text-slate-700 bg-transparent outline-none placeholder:text-slate-400"
               />
               <button disabled={!prompt.trim()} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-30 hover:bg-slate-800 transition-colors shrink-0">
@@ -1020,6 +1026,7 @@ export default function LessonEditorPage() {
   const navigate = useNavigate();
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [activePanel, setActivePanel] = useState<'details'|'standards'|'comments'|'ai'>('details');
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isScheduled, setIsScheduled] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -1038,6 +1045,15 @@ export default function LessonEditorPage() {
     el.addEventListener('input', triggerSave);
     return () => el.removeEventListener('input', triggerSave);
   }, [triggerSave]);
+
+  const handlePanelToggle = (panelId: 'details'|'standards'|'comments'|'ai') => {
+    if (activePanel === panelId && isPanelOpen) {
+      setIsPanelOpen(false);
+    } else {
+      setActivePanel(panelId);
+      setIsPanelOpen(true);
+    }
+  };
 
   const TOOLBAR_ITEMS = [
     { type: 'btn', icon: Undo2, cmd: 'undo' },
@@ -1082,9 +1098,31 @@ export default function LessonEditorPage() {
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
-        {(['blocks','focus','edit','history','list','analytics','search','settings','integrations'] as const).map((_, i) => (
-          <button key={i} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-colors" />
-        ))}
+        {[
+          { icon: Calendar, label: 'calendar' },
+          { icon: Bell, label: 'notifications' },
+          { icon: History, label: 'history' },
+          { icon: BookOpen, label: 'lessons', active: true },
+          { icon: Users, label: 'students' },
+          { icon: BarChart3, label: 'analytics' },
+          { icon: CalendarDays, label: 'schedule' },
+          { icon: Shield, label: 'standards' },
+          { icon: Mail, label: 'mail' },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
+                item.active
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Center: Editor ── */}
@@ -1100,7 +1138,7 @@ export default function LessonEditorPage() {
             {/* Status badge */}
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-colors ${isScheduled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-orange-50 border-orange-200 text-orange-600'}`}>
               <div className={`w-1.5 h-1.5 rounded-full ${isScheduled ? 'bg-emerald-500' : 'bg-orange-400'}`}></div>
-              {isScheduled ? 'Scheduled' : 'Unscheduled'}
+              {isScheduled ? 'Rejalashtirilgan' : 'Rejalashtirilmagan'}
             </div>
 
             {/* Save state */}
@@ -1108,19 +1146,19 @@ export default function LessonEditorPage() {
               {isSaving ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Saving...</span>
+                  <span>Saqlanmoqda...</span>
                 </>
               ) : (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  <span>Saved</span>
+                  <span>Saqlandi</span>
                 </>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-[12px] font-medium text-slate-400">Last edited about 6 hours ago</span>
+            <span className="text-[12px] font-medium text-slate-400">4 kun oldin tahrirlangan</span>
             <button className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -1158,14 +1196,14 @@ export default function LessonEditorPage() {
               onClick={e => { e.stopPropagation(); setShowAddBlock(!showAddBlock); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" /> Add
+              <Plus className="w-3.5 h-3.5" /> Qo'shish
             </button>
             {showAddBlock && (
               <div onClick={e => e.stopPropagation()} className="absolute right-0 top-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] py-2 z-50 w-44 animate-in fade-in zoom-in-95 duration-150">
                 {[
-                  { icon: <ImageIcon className="w-4 h-4 text-blue-500" />, label: 'Image' },
+                  { icon: <ImageIcon className="w-4 h-4 text-blue-500" />, label: 'Rasm' },
                   { icon: <Video className="w-4 h-4 text-purple-500" />, label: 'Video' },
-                  { icon: <File className="w-4 h-4 text-slate-500" />, label: 'File' },
+                  { icon: <File className="w-4 h-4 text-slate-500" />, label: 'Fayl' },
                 ].map(item => (
                   <button key={item.label} onClick={() => setShowAddBlock(false)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors text-[13px] font-bold text-slate-700">
                     {item.icon} {item.label}
@@ -1178,6 +1216,12 @@ export default function LessonEditorPage() {
 
         {/* Editable content */}
         <div className="flex-1 overflow-y-auto px-[100px] py-10">
+          {/* Cover image placeholder */}
+          <div className="w-full h-[180px] bg-slate-50 border border-dashed border-slate-200 rounded-[18px] mb-8 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-colors group">
+            <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-slate-400 mb-2 transition-colors" />
+            <span className="text-[13px] font-medium text-slate-400 group-hover:text-slate-500 transition-colors">Muqova rasmi qo'shish</span>
+          </div>
+
           <div
             contentEditable
             suppressContentEditableWarning
@@ -1219,43 +1263,60 @@ export default function LessonEditorPage() {
         </div>
       </div>
 
-      {/* ── Right Details Panel ── */}
-      <div className="w-[320px] shrink-0 bg-white border-l border-slate-100 flex flex-col h-full overflow-hidden">
-        {/* Panel tabs — rightmost icons */}
-        <div className="flex items-center justify-end gap-0.5 px-2 py-2.5 border-b border-slate-100 shrink-0">
+      {/* ── Right: Panel Content + Vertical Icon Strip ── */}
+      <div className="flex h-full shrink-0">
+        {/* Panel content area */}
+        {isPanelOpen && (
+          <div className="w-[320px] bg-white border-l border-slate-100 flex flex-col h-full overflow-hidden animate-in fade-in duration-150">
+            <div className="flex-1 overflow-hidden">
+              {activePanel === 'details' && <DetailsPanel onScheduleChange={setIsScheduled} onClose={() => setIsPanelOpen(false)} />}
+              {activePanel === 'standards' && <StandardsPanel onClose={() => setIsPanelOpen(false)} />}
+              {activePanel === 'ai' && <AIAssistantPanel onClose={() => setIsPanelOpen(false)} />}
+              {activePanel === 'comments' && (
+                <div className="flex flex-col h-full">
+                  <div className="px-5 py-4 flex items-center gap-2.5 shrink-0 border-b border-slate-100">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <h2 className="text-[15px] font-extrabold text-slate-900 tracking-tight flex-1">Izohlar</h2>
+                    <button onClick={() => setIsPanelOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex flex-col items-center justify-center flex-1 text-center px-8">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-300" stroke="currentColor" strokeWidth="2" fill="none">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] font-bold text-slate-500 mb-1">Hozircha izoh yo'q</p>
+                    <p className="text-[12px] text-slate-400">Izohlar qo'shilgandan keyin bu yerda ko'rinadi.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Vertical icon strip — always visible */}
+        <div className="w-[48px] shrink-0 bg-white border-l border-slate-100 flex flex-col items-center py-3 gap-1">
           {([
-            { id: 'details',   el: <Sliders className="w-4 h-4" /> },
-            { id: 'standards', el: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> },
-            { id: 'comments',  el: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
-            { id: 'ai',        el: <Sparkles className="w-4 h-4" /> },
+            { id: 'details',   el: <Sliders className="w-4 h-4" />, tooltip: 'Tafsilotlar' },
+            { id: 'standards', el: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>, tooltip: 'Standartlar' },
+            { id: 'comments',  el: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, tooltip: 'Izohlar' },
+            { id: 'ai',        el: <Sparkles className="w-4 h-4" />, tooltip: 'AI yordamchisi' },
           ] as const).map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActivePanel(tab.id as any)}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
-                activePanel === tab.id ? 'bg-slate-900 text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
+              onClick={() => handlePanelToggle(tab.id as any)}
+              title={tab.tooltip}
+              className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
+                activePanel === tab.id && isPanelOpen ? 'bg-slate-900 text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
               }`}
             >
               {tab.el}
             </button>
           ))}
-        </div>
-
-        <div className="flex-1 overflow-hidden">
-          {activePanel === 'details' && <DetailsPanel onScheduleChange={setIsScheduled} />}
-          {activePanel === 'standards' && <StandardsPanel onClose={() => setActivePanel('details')} />}
-          {activePanel === 'ai' && <AIAssistantPanel onClose={() => setActivePanel('details')} />}
-          {activePanel === 'comments' && (
-            <div className="flex flex-col items-center justify-center h-full text-center px-8">
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-300" stroke="currentColor" strokeWidth="2" fill="none">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
-              <p className="text-[13px] font-bold text-slate-500 mb-1">No comments yet</p>
-              <p className="text-[12px] text-slate-400">Comments will appear here once added.</p>
-            </div>
-          )}
         </div>
       </div>
 
