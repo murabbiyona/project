@@ -537,7 +537,7 @@ export default function PaperExamEditor() {
       });
 
       // 2. Insert or Update assessment session
-      const { data: assessment, error: dbErr } = await supabase
+      const { error: dbErr } = await supabase
         .from('assessments')
         .insert({
           teacher_id: user.id,
