@@ -13,7 +13,6 @@ import {
   CheckSquare,
   Wand2,
   HardDrive,
-  Brain,
   Zap,
   TrendingUp,
   FileText,
@@ -82,12 +81,6 @@ export default function Sidebar() {
         { name: 'Hisobotlar', href: '/reports', icon: FileText },
       ]
     },
-    {
-      title: 'Murabbiy AI',
-      items: [
-        { name: 'AI Dars Rejalashtirish', href: '/ai-planner', icon: Brain },
-      ]
-    }
   ];
 
   return (
