@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown, Check, Edit3, List as ListIcon, Calendar, Image as ImageIcon, Bold, Italic, Underline, Strikethrough, Link as LinkIcon, ListOrdered, List, Code, Eye, Download, Import, Trash2, MoreVertical, Folder, ArrowRightLeft } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown, Check, Edit3, List as ListIcon, Calendar, Image as ImageIcon, Bold, Italic, Underline, Strikethrough, Link as LinkIcon, ListOrdered, List, Code, Eye, Download, Import, Trash2, MoreVertical, Folder, ArrowRightLeft, Upload, BookOpen, ClipboardList, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LessonsCalendar from '../components/lessons/LessonsCalendar';
@@ -49,6 +49,12 @@ export default function Lessons() {
   const [lessonMenuId, setLessonMenuId] = useState<string | null>(null);
   const [moveTargetClass, setMoveTargetClass] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+
+  // Upload states
+  const [ishReja, setIshReja] = useState<File | null>(null);
+  const [darslik, setDarslik] = useState<File | null>(null);
+  const ishRejaRef = useRef<HTMLInputElement>(null);
+  const darslikRef = useRef<HTMLInputElement>(null);
 
   const selectedClassInfo = CLASSES.find(c => c.name === activeClass)!;
   const selectedUnitObj = UNITS.find(u => u.id === activeUnit);
@@ -153,6 +159,122 @@ export default function Lessons() {
              </div>
            </div>
         )}
+
+        {/* Upload Section: Choraklik ish reja & Darslik */}
+        <div className="p-3 shrink-0 border-t border-slate-50">
+          <div className="space-y-2">
+
+            {/* Choraklik ish reja */}
+            <input
+              ref={ishRejaRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              className="hidden"
+              onChange={e => { if (e.target.files?.[0]) setIshReja(e.target.files[0]); }}
+            />
+            <button
+              onClick={() => ishReja ? null : ishRejaRef.current?.click()}
+              className={`w-full group relative overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 ${
+                ishReja
+                  ? 'border-emerald-300 bg-emerald-50/60'
+                  : 'border-slate-200 bg-gradient-to-br from-indigo-50/40 via-white to-violet-50/40 hover:border-indigo-300 hover:shadow-md'
+              } p-3`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  ishReja
+                    ? 'bg-emerald-100 text-emerald-600'
+                    : 'bg-indigo-100/80 text-indigo-500 group-hover:bg-indigo-200/80 group-hover:scale-110'
+                }`}>
+                  {ishReja ? <CheckCircle2 className="w-5 h-5" /> : <ClipboardList className="w-5 h-5" />}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  {ishReja ? (
+                    <>
+                      <p className="text-[12px] font-extrabold text-emerald-700 truncate">{ishReja.name}</p>
+                      <p className="text-[10px] font-bold text-emerald-500">{(ishReja.size / 1024).toFixed(0)} KB</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[12px] font-extrabold text-slate-800">Choraklik ish reja</p>
+                      <p className="text-[10px] font-bold text-slate-400">PDF, Word, Excel</p>
+                    </>
+                  )}
+                </div>
+                {ishReja ? (
+                  <button
+                    onClick={e => { e.stopPropagation(); setIshReja(null); }}
+                    className="w-7 h-7 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-400 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <Upload className="w-4 h-4 text-indigo-300 group-hover:text-indigo-500 transition-colors shrink-0" />
+                )}
+              </div>
+            </button>
+
+            {/* Darslik */}
+            <input
+              ref={darslikRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={e => { if (e.target.files?.[0]) setDarslik(e.target.files[0]); }}
+            />
+            <button
+              onClick={() => darslik ? null : darslikRef.current?.click()}
+              className={`w-full group relative overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 ${
+                darslik
+                  ? 'border-emerald-300 bg-emerald-50/60'
+                  : 'border-slate-200 bg-gradient-to-br from-amber-50/40 via-white to-orange-50/40 hover:border-amber-300 hover:shadow-md'
+              } p-3`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  darslik
+                    ? 'bg-emerald-100 text-emerald-600'
+                    : 'bg-amber-100/80 text-amber-500 group-hover:bg-amber-200/80 group-hover:scale-110'
+                }`}>
+                  {darslik ? <CheckCircle2 className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  {darslik ? (
+                    <>
+                      <p className="text-[12px] font-extrabold text-emerald-700 truncate">{darslik.name}</p>
+                      <p className="text-[10px] font-bold text-emerald-500">{(darslik.size / 1024).toFixed(0)} KB</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[12px] font-extrabold text-slate-800">Fan darsligi</p>
+                      <p className="text-[10px] font-bold text-slate-400">PDF formatda</p>
+                    </>
+                  )}
+                </div>
+                {darslik ? (
+                  <button
+                    onClick={e => { e.stopPropagation(); setDarslik(null); }}
+                    className="w-7 h-7 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-400 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <Upload className="w-4 h-4 text-amber-300 group-hover:text-amber-500 transition-colors shrink-0" />
+                )}
+              </div>
+            </button>
+
+            {/* AI status indicator */}
+            {(ishReja || darslik) && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-[10px] font-bold text-emerald-600">
+                  AI dars reja tuzishga tayyor
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* COLUMN 2: Units */}
