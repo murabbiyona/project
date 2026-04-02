@@ -53,6 +53,7 @@ const getGradeStyle = (score: number | null, max: number | null) => {
 };
 
 export default function Grading() {
+  const { t: _t } = useTranslation();
   const navigate = useNavigate();
   const [selectedClassId, setSelectedClassId] = useState<string | null>('7-D');
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState<boolean>(false);
@@ -259,7 +260,7 @@ export default function Grading() {
                               <span className="text-[10px] text-muted-foreground">89.0%</span>
                             </div>
                           </td>
-                          {assignments.map((_, i) => {
+                          {assignments.map((_assignment, i) => {
                              // average logic (mock)
                              const averages = [90.6, 90.5, 74.4, 55.0];
                              const grades = ['A', 'A', 'C', 'F'];
