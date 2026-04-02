@@ -5,6 +5,7 @@ import {
   Filter, EyeOff, Maximize2, FileText, Check, Link2, ListPlus, ChevronDown, Calendar, X, Edit2, Trash2
 } from 'lucide-react';
 import VoiceGrading from '../components/grading/VoiceGrading';
+import type { Student } from '../types/database';
 
 const CLASSES = [
   { id: '6-D', label: '6-D', time: '13:00 - 13:45', color: 'bg-blue-100', textColor: 'text-blue-500', dot: 'bg-blue-500', students: [{i:'AA'}] },
@@ -52,6 +53,35 @@ const STUDENTS_5A = [
   { id: '6', name: 'Farida Safarova', initials: 'FS' },
   { id: '7', name: 'Halima Jumanazarova', initials: 'HJ' },
 ];
+
+// Mock o'quvchilarni Student tipiga aylantirish
+function toStudents(list: { id: string; name: string; initials: string }[]): Student[] {
+  return list.map(s => {
+    const parts = s.name.split(' ')
+    return {
+      id: s.id,
+      school_id: '',
+      class_id: '',
+      profile_id: null,
+      first_name: parts[0] || '',
+      last_name: parts.slice(1).join(' ') || '',
+      journal_number: null,
+      birth_date: null,
+      gender: null,
+      photo_url: null,
+      status: 'active' as const,
+      tags: [],
+      created_at: '',
+      updated_at: '',
+    } as Student
+  })
+}
+
+function getStudentsForClass(classId: string | null): Student[] {
+  if (classId === '9-A') return toStudents(STUDENTS_9A)
+  if (classId === '9-B') return toStudents(STUDENTS_9B)
+  return toStudents(STUDENTS_5A)
+}
 
 interface LocalAssignment {
   id: string;
@@ -246,7 +276,7 @@ export default function Grading() {
                     <VoiceGrading
                       classId={selectedClassId}
                       subjectId=""
-                      students={[]}
+                      students={getStudentsForClass(selectedClassId)}
                       gradeType="formative"
                       onGradeAdded={() => {}}
                     />
