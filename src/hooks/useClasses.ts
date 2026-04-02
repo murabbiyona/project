@@ -16,7 +16,15 @@ export function useClasses() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchClasses = useCallback(async () => {
-    if (!profile?.school_id) {
+    let schoolId = profile?.school_id
+
+    // Fallback if no school_id
+    if (!schoolId) {
+      const { data: schools } = await supabase.from('schools').select('id').limit(1).single()
+      schoolId = schools?.id
+    }
+
+    if (!schoolId) {
       setLoading(false)
       return
     }
@@ -32,7 +40,7 @@ export function useClasses() {
           lesson_plans(count),
           assessments(count)
         `)
-        .eq('school_id', profile.school_id)
+        .eq('school_id', schoolId)
         .eq('is_active', true)
         .order('name')
 
@@ -63,12 +71,19 @@ export function useClasses() {
     section?: string
     color?: string
   }) {
-    if (!profile?.school_id) return { error: 'Maktab topilmadi' }
+    let schoolId = profile?.school_id
+
+    if (!schoolId) {
+      const { data: schools } = await supabase.from('schools').select('id').limit(1).single()
+      schoolId = schools?.id
+    }
+
+    if (!schoolId) return { error: 'Maktab topilmadi' }
 
     const { data, error: err } = await supabase
       .from('classes')
       .insert({
-        school_id: profile.school_id,
+        school_id: schoolId,
         name: input.name,
         grade_level: input.grade_level,
         section: input.section,
