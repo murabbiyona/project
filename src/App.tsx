@@ -13,11 +13,13 @@ import Standards from './pages/Standards';
 import Tasks from './pages/Tasks';
 import Lessons from './pages/Lessons';
 import LessonEditorPage from './pages/LessonEditorPage';
+import PaperExamEditor from './pages/PaperExamEditor';
 import Portfolio from './pages/Portfolio';
 import Feedback from './pages/Feedback';
 import Subscription from './pages/Subscription';
 import ClassDetail from './pages/ClassDetail';
 import Rewards from './pages/Rewards';
+import AIPlanner from './pages/AIPlanner';
 import LiveAssessment from './pages/LiveAssessment';
 import Analytics from './pages/Analytics';
 import Reports from './pages/Reports';
@@ -34,7 +36,6 @@ import MobileScanner from './pages/mobile/MobileScanner';
 import MobileGrades from './pages/mobile/MobileGrades';
 import MobileProfile from './pages/mobile/MobileProfile';
 import MobileRemote from './pages/mobile/MobileRemote';
-import MobileAssistant from './pages/mobile/MobileAssistant';
 import ParentMobileLayout from './layouts/ParentMobileLayout';
 import ParentAppHome from './pages/parent-app/ParentAppHome';
 import ParentAppGrades from './pages/parent-app/ParentAppGrades';
@@ -57,12 +58,14 @@ function App() {
         <Route path="timetable" element={<Timetable />} />
         <Route path="planner" element={<Planner />} />
         <Route path="grading" element={<Grading />} />
+        <Route path="grading/paper-exam/:examId" element={<PaperExamEditor />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="standards" element={<Standards />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="lessons" element={<Lessons />} />
         <Route path="lessons/editor" element={<LessonEditorPage />} />
         <Route path="rewards" element={<Rewards />} />
+        <Route path="ai-planner" element={<AIPlanner />} />
         <Route path="live-assessment" element={<LiveAssessment />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="reports" element={<Reports />} />
@@ -93,7 +96,6 @@ function App() {
         <Route path="remote" element={<MobileRemote />} />
         <Route path="grades" element={<MobileGrades />} />
         <Route path="profile" element={<MobileProfile />} />
-        <Route path="assistant" element={<MobileAssistant />} />
       </Route>
 
       {/* Ota-ona Mobile App (PWA) */}

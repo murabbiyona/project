@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
@@ -5,26 +6,40 @@ import FloatingAssistant from '../components/ai/FloatingAssistant';
 import { CurriculumProvider } from '../contexts/CurriculumContext';
 
 export default function DashboardLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <CurriculumProvider>
     <div 
-      className="group/sidebar-wrapper flex w-full h-screen overflow-hidden bg-background"
-      style={{ '--sidebar-width': '16rem', '--sidebar-width-icon': '4.5rem' } as React.CSSProperties}
+      className="group/sidebar-wrapper flex flex-col w-full h-screen overflow-hidden bg-background"
+      style={{ '--sidebar-width': '16rem', '--sidebar-width-icon': '4.5rem', '--top-header-height': '3.8rem', '--content-padding-top': '0.5rem' } as React.CSSProperties}
     >
-      <Sidebar />
-      <div 
-        className="flex flex-col h-screen min-h-[600px] w-full" 
-        style={{ '--top-header-height': '3.8rem', '--content-padding-top': '0.5rem' } as React.CSSProperties}
-      >
-        <Header />
-        <main className="flex-1 min-w-0 overflow-hidden flex flex-col bg-pattern-active">
-          <div className="flex-1 min-h-0 pb-4" style={{ paddingTop: 'var(--content-padding-top)' }}>
-            <div className="h-full transition-opacity duration-200">
-              <Outlet />
-            </div>
+      <Header sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
+      
+      <div className="flex flex-1 min-h-[600px] min-w-0 overflow-hidden">
+        {/* Sidebar - slide in/out */}
+        <div
+          className={`shrink-0 transition-all duration-300 ease-in-out h-full bg-background relative z-10 ${
+            sidebarOpen ? 'w-[var(--sidebar-width)] border-r border-[#e4e4e7] opacity-100' : 'w-0 border-r-0 opacity-0 overflow-hidden'
+          }`}
+        >
+          <div className="w-[var(--sidebar-width)] h-full overflow-hidden">
+            <Sidebar />
           </div>
-        </main>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden flex flex-col bg-pattern-active">
+            <div className="flex-1 min-h-0 pb-4 flex flex-col" style={{ paddingTop: 'var(--content-padding-top)' }}>
+              <div className="flex-1 min-h-0 flex flex-col transition-opacity duration-200">
+                <Outlet />
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
+
       <FloatingAssistant />
     </div>
     </CurriculumProvider>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   GraduationCap,
@@ -13,6 +13,7 @@ import {
   CheckSquare,
   Wand2,
   HardDrive,
+  Brain,
   Zap,
   TrendingUp,
   FileText,
@@ -81,23 +82,17 @@ export default function Sidebar() {
         { name: 'Hisobotlar', href: '/reports', icon: FileText },
       ]
     },
+    {
+      title: 'Murabbiy AI',
+      items: [
+        { name: 'AI Dars Rejalashtirish', href: '/ai-planner', icon: Brain },
+      ]
+    }
   ];
 
   return (
     <>
-      <div className="flex flex-col w-[16rem] bg-[#fbfbfc] border-r border-[#e4e4e7] h-screen sticky top-0 font-sans text-sm pb-4">
-        {/* Header Logo */}
-        <div className="flex flex-col gap-2 p-2 px-3 pt-5 pb-1">
-          <Link to="/" className="flex items-center gap-2 pl-[18px] py-1 transition-opacity hover:opacity-80">
-            <div className="h-7 w-7 rounded-lg bg-[#2e3138] flex items-center justify-center shrink-0">
-              <GraduationCap className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-[18px] text-[#09090b] font-medium">
-              <span style={{ letterSpacing: "-0.05em", fontWeight: 600 }}>Murabbiyona</span> LMS
-            </span>
-          </Link>
-        </div>
-        
+      <div className="flex flex-col w-full bg-[#fbfbfc] h-full font-sans text-sm pb-4">
         {/* Semester Switcher Wrapper - like HTML reference */}
         <div className="flex flex-col gap-2 p-2 px-3 pt-4 pb-1">
           <button

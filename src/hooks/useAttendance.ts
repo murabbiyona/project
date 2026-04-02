@@ -42,31 +42,6 @@ export function useAttendance(classId?: string) {
     setLoading(false)
   }, [user, classId])
 
-  /** Berilgan sinf va sanalar oralig'idagi barcha davomat yozuvlari (jadval ko'rinishi uchun) */
-  const fetchAttendanceRange = useCallback(async (cid: string, from: string, to: string) => {
-    if (!user) return [] as Attendance[]
-    setLoading(true)
-    setError(null)
-
-    const { data, error: err } = await supabase
-      .from('attendance')
-      .select('*')
-      .eq('class_id', cid)
-      .gte('date', from)
-      .lte('date', to)
-      .order('date')
-
-    if (err) {
-      setError(err.message)
-      setLoading(false)
-      return []
-    }
-
-    const rows = (data || []) as Attendance[]
-    setLoading(false)
-    return rows
-  }, [user])
-
   async function markAttendance(input: {
     student_id: string
     class_id: string
@@ -129,62 +104,5 @@ export function useAttendance(classId?: string) {
     return { error: err?.message || null }
   }
 
-  /**
-   * Bitta katak: sanani aniq beradi. status null bo'lsa yozuv o'chiriladi.
-   */
-  async function saveAttendanceCell(input: {
-    student_id: string
-    class_id: string
-    date: string
-    status: AttendanceStatus | null
-    period_number?: number
-    note?: string | null
-  }) {
-    if (!user) return { error: 'Foydalanuvchi topilmadi' }
-
-    const period = input.period_number ?? 1
-
-    if (input.status === null) {
-      const { error: err } = await supabase
-        .from('attendance')
-        .delete()
-        .eq('student_id', input.student_id)
-        .eq('class_id', input.class_id)
-        .eq('date', input.date)
-        .eq('period_number', period)
-
-      return { data: null, error: err?.message || null }
-    }
-
-    const { data, error: err } = await supabase
-      .from('attendance')
-      .upsert({
-        student_id: input.student_id,
-        class_id: input.class_id,
-        teacher_id: user.id,
-        date: input.date,
-        period_number: period,
-        status: input.status,
-        check_method: 'manual' as const,
-        check_time: new Date().toISOString(),
-        note: input.note ?? null,
-      }, {
-        onConflict: 'student_id,date,period_number',
-      })
-      .select()
-      .single()
-
-    return { data: data as Attendance | null, error: err?.message || null }
-  }
-
-  return {
-    records,
-    loading,
-    error,
-    fetchAttendance,
-    fetchAttendanceRange,
-    saveAttendanceCell,
-    markAttendance,
-    bulkMarkAttendance,
-  }
+  return { records, loading, error, fetchAttendance, markAttendance, bulkMarkAttendance }
 }
