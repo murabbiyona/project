@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { GraduationCap, Sparkles } from 'lucide-react';
 import { getTeacherMobileRouteMeta, teacherMobileTabs } from '../data/teacherMobile';
-import { fadeUpItem, floatingLoop, pageTransition } from '../lib/mobileMotion';
+import { floatingLoop, pageTransition } from '../lib/mobileMotion';
 
 export default function MobileLayout() {
   const location = useLocation();

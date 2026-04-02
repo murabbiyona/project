@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Mic, MicOff, Check, X, AlertTriangle,
-  Volume2, ChevronRight, Info
+  Mic, MicOff, Check, X, AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useVoiceMobileGrading } from '../../hooks/useVoiceMobileGrading';
@@ -63,7 +62,7 @@ export default function MobileGrades() {
   
   // Voice Hook
   const {
-    isListening, isSupported,
+    isListening,
     transcript, detectedGrades, error,
     startListening, stopListening, cancelResult, setError
   } = useVoiceMobileGrading();
