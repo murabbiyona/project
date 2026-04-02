@@ -3,6 +3,7 @@ import {
   Mic, MicOff, Check, X, AlertTriangle,
   Volume2, ChevronRight, Info
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useVoiceMobileGrading } from '../../hooks/useVoiceMobileGrading';
 
 const classOptions = ['5-A', '5-B', '6-A', '6-B', '7-A'];
@@ -191,7 +192,11 @@ export default function MobileGrades() {
           const isJustVoiced = recentlyVoiced[student];
           
           return (
-            <div
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-10px" }}
+              transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
               key={student}
               className={`bg-white rounded-xl p-3 shadow-sm transition-all duration-500 relative overflow-hidden ${
                 isJustVoiced ? 'ring-2 ring-indigo-500 shadow-indigo-200 scale-[1.02] z-10' : ''
@@ -244,14 +249,14 @@ export default function MobileGrades() {
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Ekran ostidagi suzuvchi panel */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-100 via-zinc-100/95 to-transparent pointer-events-none z-50">
-        <div className="max-w-base mx-auto pointer-events-auto">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-[75px] pt-12 px-4 bg-gradient-to-t from-zinc-100 via-zinc-100/90 to-transparent pointer-events-none z-40">
+        <div className="w-full pointer-events-auto">
           
           {/* KUZATISH PANELI (OVOZ YOZILAYOTGANDA) */}
           {isListening ? (

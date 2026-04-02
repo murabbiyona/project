@@ -57,7 +57,7 @@ export default function MobileLayout() {
           animate="animate"
           exit="exit"
           // Ekranning yuqori va pastki qismi absolute panellar ostida yopilib qolmasligi uchun padding beramiz
-          className="absolute inset-0 overflow-y-auto overflow-x-hidden pt-[170px] pb-[100px] px-4"
+          className="absolute inset-0 overflow-y-auto overflow-x-hidden pt-[80px] pb-[80px] px-4"
         >
           <Outlet />
         </motion.main>
@@ -85,34 +85,14 @@ export default function MobileLayout() {
               Ustoz App
             </span>
           </div>
-
-          <motion.div
-            key={routeMeta.path}
-            variants={fadeUpItem}
-            initial="hidden"
-            animate="show"
-            className="mt-4 rounded-[24px] bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-800 px-4 py-3 text-white shadow-xl shadow-zinc-900/10"
-          >
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">{routeMeta.eyebrow}</p>
-            <div className="mt-1 flex items-end justify-between gap-3">
-              <div>
-                <h1 className="text-lg font-semibold">{routeMeta.title}</h1>
-                <p className="text-xs text-zinc-400">Yangi xususiyatlar qo‘shishga tayyor mobil shell</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 px-2.5 py-1.5 text-right">
-                <p className="text-[10px] text-zinc-400">Holat</p>
-                <p className="text-xs font-semibold text-emerald-300">Live UI</p>
-              </div>
-            </div>
-          </motion.div>
         </motion.header>
 
         <motion.nav
           initial={{ y: 0 }}
           animate={{ y: showNav ? 0 : "100%" }}
           transition={{ type: "spring", stiffness: 350, damping: 30 }}
-          className="absolute bottom-0 left-0 right-0 z-50 w-full border-t border-zinc-200/50 bg-white/85 px-2 pt-2 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.04)]"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 8px)' }}
+          className="absolute bottom-0 left-0 right-0 z-50 w-full border-t border-zinc-200/50 bg-white/85 px-1.5 pt-1.5 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.04)]"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
         >
           <div className="flex items-center justify-around w-full relative">
             {teacherMobileTabs.map((tab) => {
@@ -123,7 +103,7 @@ export default function MobileLayout() {
                   to={tab.to}
                   end={tab.end}
                   className={({ isActive }) =>
-                    `flex flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl py-2 relative transition-all duration-300 ${
+                    `flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-1.5 relative transition-all duration-300 ${
                       isActive ? 'text-emerald-600' : 'text-zinc-400'
                     }`
                   }
@@ -134,27 +114,27 @@ export default function MobileLayout() {
                         whileTap={{ scale: 0.85 }}
                         animate={{ 
                           scale: isActive ? 1.05 : 1,
-                          y: isActive ? -2 : 0
+                          y: isActive ? -1 : 0
                         }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        className={`relative rounded-xl p-2 transition-colors duration-300 ${
+                        className={`relative rounded-lg p-1.5 transition-colors duration-300 ${
                           isActive 
                             ? 'bg-emerald-50 text-emerald-600 shadow-sm ring-1 ring-emerald-100' 
                             : 'bg-transparent text-zinc-400'
                         }`}
                       >
-                        <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+                        <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.5 : 2} />
                         
                         {/* Faol bo'lgandagi animatsiyali nuqta */}
                         {isActive && (
                           <motion.div
                             layoutId="mobileNavIndicator"
-                            className="absolute -bottom-3 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-emerald-500"
+                            className="absolute -bottom-2.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-emerald-500"
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                           />
                         )}
                       </motion.div>
-                      <span className={`text-[10px] uppercase tracking-wide transition-all duration-300 ${isActive ? 'font-bold opacity-100' : 'font-medium opacity-70'}`}>
+                      <span className={`text-[9px] uppercase tracking-wide transition-all duration-300 ${isActive ? 'font-bold opacity-100' : 'font-semibold opacity-70'}`}>
                         {tab.label}
                       </span>
                     </>
