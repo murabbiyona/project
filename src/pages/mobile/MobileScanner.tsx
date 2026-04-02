@@ -2,13 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import {
   Camera, CameraOff, CheckCircle, AlertCircle,
-  Volume2, VolumeX, Users, Clock, XCircle
+  Volume2, VolumeX, Users, Clock, XCircle, FileText
 } from 'lucide-react';
 import { useQRAttendance, type QRScanResult } from '../../hooks/useQRAttendance';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePaperScanner } from '../../hooks/usePaperScanner';
-import { FileText } from 'lucide-react';
 
 export default function MobileScanner() {
   const { user } = useAuth();
@@ -40,51 +39,54 @@ export default function MobileScanner() {
 
   // Sinf va fanlarni yuklash
   useEffect(() => {
-    if (!user) return;
     (async () => {
-      // O'qituvchiga biriktirilgan sinflar
-      const { data: assignments } = await supabase
-        .from('teacher_assignments')
-        .select('class_id, subject_id, classes:class_id(id, name), subjects:subject_id(id, name_uz)')
-        .eq('teacher_id', user.id);
+      // If we have a user, get their specific assignments. If not, get general ones for testing.
+      if (user) {
+        const { data: assignments } = await supabase
+          .from('teacher_assignments')
+          .select('class_id, subject_id, classes:class_id(id, name), subjects:subject_id(id, name_uz)')
+          .eq('teacher_id', user.id);
 
-      if (assignments && assignments.length > 0) {
-        const classMap = new Map<string, string>();
-        const subjectMap = new Map<string, string>();
-        for (const a of assignments) {
-          const cls = a.classes as any;
-          const subj = a.subjects as any;
-          if (cls) classMap.set(cls.id, cls.name);
-          if (subj) subjectMap.set(subj.id, subj.name_uz);
+        if (assignments && assignments.length > 0) {
+          const classMap = new Map<string, string>();
+          const subjectMap = new Map<string, string>();
+          for (const a of assignments) {
+            const cls = a.classes as any;
+            const subj = a.subjects as any;
+            if (cls) classMap.set(cls.id, cls.name);
+            if (subj) subjectMap.set(subj.id, subj.name_uz);
+          }
+          setClasses(Array.from(classMap, ([id, name]) => ({ id, name })));
+          setSubjects(Array.from(subjectMap, ([id, name]) => ({ id, name })));
+          return;
         }
-        setClasses(Array.from(classMap, ([id, name]) => ({ id, name })));
-        setSubjects(Array.from(subjectMap, ([id, name]) => ({ id, name })));
-      } else {
-        // Fallback: barcha sinflar
-        const { data: allClasses } = await supabase
-          .from('classes')
-          .select('id, name')
-          .eq('is_active', true)
-          .order('name');
-        setClasses((allClasses || []).map(c => ({ id: c.id, name: c.name })));
-
-        const { data: allSubjects } = await supabase
-          .from('subjects')
-          .select('id, name_uz')
-          .order('name_uz');
-        setSubjects((allSubjects || []).map(s => ({ id: s.id, name: s.name_uz })));
       }
+      
+      // Fallback: barcha sinflar (Guest testing mode)
+      const { data: allClasses } = await supabase
+        .from('classes')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+      setClasses((allClasses || []).map(c => ({ id: c.id, name: c.name })));
+
+      const { data: allSubjects } = await supabase
+        .from('subjects')
+        .select('id, name_uz')
+        .order('name_uz');
+      setSubjects((allSubjects || []).map(s => ({ id: s.id, name: s.name_uz })));
     })();
   }, [user]);
 
   // Aktiv testlarni yuklash
   useEffect(() => {
-    if (!user || activeMode !== 'exam') return;
+    if (activeMode !== 'exam') return;
     (async () => {
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
       const { data } = await supabase
         .from('assessments')
         .select('*')
-        .eq('teacher_id', user.id)
+        .eq('teacher_id', userId)
         .eq('status', 'active')
         .eq('method', 'qr_code')
         .order('created_at', { ascending: false });
@@ -92,7 +94,6 @@ export default function MobileScanner() {
     })();
   }, [user, activeMode]);
 
-  // Ovoz chiqarish (Telegram bot vibrate kabi)
   const playBeep = useCallback((type: 'success' | 'error') => {
     if (!soundEnabled) return;
     try {
@@ -108,7 +109,6 @@ export default function MobileScanner() {
     } catch {}
   }, [soundEnabled]);
 
-  // QR skanerlanganda — backend ga yozish
   const onQRDetected = useCallback(async (decodedText: string) => {
     if (processingRef.current) return;
     processingRef.current = true;
@@ -121,22 +121,23 @@ export default function MobileScanner() {
         if (result.status === 'success') {
           playBeep('success');
           if (navigator.vibrate) navigator.vibrate(100);
-        } else {
+        } else if (result.status === 'duplicate') {
           playBeep('error');
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        } else {
+          playBeep('error');
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
-      } else if (activeMode === 'exam' && selectedExam && !processingRef.current) {
-        // PAPER EXAM SCANNING LOGIC
+      } else if (activeMode === 'exam' && selectedExam) {
         try {
           const exam = availableExams.find(e => e.id === selectedExam);
           if (!exam) return;
 
-          // Parse QR: { examId, studentId, variant }
           let qrData;
           try {
             qrData = JSON.parse(decodedText);
           } catch {
-            return; // Not a valid exam QR
+            return;
           }
 
           if (qrData.examId) {
@@ -159,12 +160,10 @@ export default function MobileScanner() {
         }
       }
     } finally {
-      // 1.5 soniya kutish
       setTimeout(() => { processingRef.current = false; }, 1500);
     }
   }, [handleScan, playBeep, activeMode, selectedExam, availableExams, processFrame]);
 
-  // Kamerani yoqish
   const startScanner = useCallback(async () => {
     setCameraError(null);
     try {
@@ -182,7 +181,6 @@ export default function MobileScanner() {
     }
   }, [onQRDetected]);
 
-  // Kamerani to'xtatish
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
       try {
@@ -194,12 +192,10 @@ export default function MobileScanner() {
     setIsScanning(false);
   }, []);
 
-  // Unmount da kamerani to'xtatish
   useEffect(() => {
     return () => { scannerRef.current?.stop().catch(() => {}); };
   }, []);
 
-  // Sessiya boshlash
   const handleStartSession = async () => {
     if (!selectedClass || !selectedSubject) return;
     const cls = classes.find(c => c.id === selectedClass);
@@ -215,7 +211,6 @@ export default function MobileScanner() {
     });
   };
 
-  // Davomat yakunlash
   const handleFinish = async () => {
     await stopScanner();
     const result = await finishSession();
@@ -228,7 +223,6 @@ export default function MobileScanner() {
     ? Math.round((scannedCount / Math.max(session.totalStudents, 1)) * 100)
     : 0;
 
-  // ─── YAKUNLASH NATIJASI ───────────────────
   if (finishResult) {
     return (
       <div className="space-y-5 text-center pt-6">
@@ -267,7 +261,6 @@ export default function MobileScanner() {
             <p className="text-center text-sm font-bold mt-2 text-emerald-600">{finishResult.percent}% davomat</p>
           </div>
         </div>
-        <p className="text-xs text-zinc-400">Telegram orqali xabarnoma yuborildi</p>
         <button
           onClick={() => setFinishResult(null)}
           className="w-full h-12 bg-zinc-900 text-white font-semibold rounded-xl"
@@ -278,7 +271,6 @@ export default function MobileScanner() {
     );
   }
 
-  // ─── SESSIYA BOSHLANMAGAN — sinf/fan tanlash ───
   if (!session) {
     return (
       <div className="space-y-5">
@@ -290,7 +282,6 @@ export default function MobileScanner() {
           <p className="text-sm text-zinc-500 mt-1">Davomat yoki Testlarni skanerlang</p>
         </div>
 
-        {/* Mode Switcher */}
         <div className="flex p-1 bg-zinc-100 rounded-2xl">
           <button
             onClick={() => setActiveMode('attendance')}
@@ -394,7 +385,6 @@ export default function MobileScanner() {
           </div>
         )}
 
-        {/* Qanday ishlaydi */}
         <div className="bg-zinc-50 rounded-2xl p-4 space-y-3">
           <h3 className="text-sm font-semibold text-zinc-700">Qanday ishlaydi?</h3>
           <div className="space-y-2 text-xs text-zinc-500">
@@ -406,28 +396,14 @@ export default function MobileScanner() {
               <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</span>
               Kamerani yoqib QR kodlarni skanerlang
             </div>
-            <div className="flex gap-2">
-              <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">3</span>
-              Har bir QR skan — "keldi" deb yoziladi (DB ga)
-            </div>
-            <div className="flex gap-2">
-              <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">4</span>
-              Yakunlash — kelmaganlar avtomatik "absent" bo'ladi
-            </div>
-            <div className="flex gap-2">
-              <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">5</span>
-              Telegram orqali xabarnoma yuboriladi
-            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ─── AKTIV SESSIYA — SKANERLASH ─────────────
   return (
     <div className="space-y-4 pb-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-zinc-900">
@@ -448,7 +424,6 @@ export default function MobileScanner() {
         </div>
       </div>
 
-      {/* Live counter */}
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-zinc-700">
@@ -473,11 +448,9 @@ export default function MobileScanner() {
         </div>
       </div>
 
-      {/* QR Scanner */}
       <div className="bg-zinc-900 rounded-3xl overflow-hidden relative border-4 border-zinc-800">
         <div id="qr-reader" className={isScanning ? 'scale-105' : 'hidden'} />
         
-        {/* Scanning Guide Frame */}
         {isScanning && activeMode === 'exam' && (
           <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
             <div className="w-[85%] aspect-[1/1.4] border-2 border-emerald-400/50 rounded-2xl shadow-[0_0_0_400px_rgba(0,0,0,0.5)]">
@@ -511,7 +484,6 @@ export default function MobileScanner() {
           </div>
         )}
 
-        {/* Oxirgi skan natijasi */}
         {lastScan && (
           <div className={`mx-3 mb-3 p-3 rounded-xl flex items-center gap-3 ${
             lastScan.status === 'success' ? 'bg-emerald-500/20' :
@@ -541,7 +513,6 @@ export default function MobileScanner() {
           </div>
         )}
 
-        {/* Kamera tugmasi */}
         <div className="p-4 pt-0 bg-zinc-900">
           <button
             onClick={isScanning ? stopScanner : startScanner}
@@ -560,67 +531,65 @@ export default function MobileScanner() {
         </div>
       </div>
 
-        {/* Paper Exam Result Popover */}
-        {paperResult && (
-          <div className="fixed inset-x-4 bottom-24 bg-white rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 ring-1 ring-zinc-100 z-50">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-zinc-900">Natija tayyor!</h3>
-                  <p className="text-xs text-zinc-500">Variant: {paperResult.variant}</p>
-                </div>
+      {paperResult && (
+        <div className="fixed inset-x-4 bottom-24 bg-white rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 ring-1 ring-zinc-100 z-50">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
-              <button onClick={() => setPaperResult(null)} className="p-2 hover:bg-zinc-100 rounded-full">
-                <XCircle className="w-5 h-5 text-zinc-400" />
-              </button>
-            </div>
-
-            <div className="bg-zinc-50 rounded-2xl p-4 flex items-center justify-between mb-5">
-              <div className="text-center flex-1 border-r border-zinc-200">
-                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Ball</p>
-                <p className="text-2xl font-black text-zinc-900">{paperResult.score} / {paperResult.maxScore}</p>
-              </div>
-              <div className="text-center flex-1">
-                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Foiz</p>
-                <p className={`text-2xl font-black ${
-                  (paperResult.score / paperResult.maxScore) >= 0.86 ? 'text-emerald-500' :
-                  (paperResult.score / paperResult.maxScore) >= 0.71 ? 'text-blue-500' :
-                  (paperResult.score / paperResult.maxScore) >= 0.56 ? 'text-yellow-500' : 'text-red-500'
-                }`}>
-                  {Math.round((paperResult.score / paperResult.maxScore) * 100)}%
-                </p>
+              <div>
+                <h3 className="font-bold text-zinc-900">Natija tayyor!</h3>
+                <p className="text-xs text-zinc-500">Variant: {paperResult.variant}</p>
               </div>
             </div>
+            <button onClick={() => setPaperResult(null)} className="p-2 hover:bg-zinc-100 rounded-full">
+              <XCircle className="w-5 h-5 text-zinc-400" />
+            </button>
+          </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPaperResult(null)}
-                className="flex-1 h-12 bg-zinc-100 text-zinc-600 font-bold rounded-xl"
-              >
-                Bekor qilish
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    await saveExamGrade(paperResult);
-                    setPaperResult(null);
-                    playBeep('success');
-                  } catch (e) {
-                    alert('Saqlashda xatolik yuz berdi');
-                  }
-                }}
-                className="flex-1 h-12 bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-200"
-              >
-                Saqlash
-              </button>
+          <div className="bg-zinc-50 rounded-2xl p-4 flex items-center justify-between mb-5">
+            <div className="text-center flex-1 border-r border-zinc-200">
+              <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Ball</p>
+              <p className="text-2xl font-black text-zinc-900">{paperResult.score} / {paperResult.maxScore}</p>
+            </div>
+            <div className="text-center flex-1">
+              <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Foiz</p>
+              <p className={`text-2xl font-black ${
+                (paperResult.score / paperResult.maxScore) >= 0.86 ? 'text-emerald-500' :
+                (paperResult.score / paperResult.maxScore) >= 0.71 ? 'text-blue-500' :
+                (paperResult.score / paperResult.maxScore) >= 0.56 ? 'text-yellow-500' : 'text-red-500'
+              }`}>
+                {Math.round((paperResult.score / paperResult.maxScore) * 100)}%
+              </p>
             </div>
           </div>
-        )}
 
-      {/* Skan tarixi */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => setPaperResult(null)}
+              className="flex-1 h-12 bg-zinc-100 text-zinc-600 font-bold rounded-xl"
+            >
+              Bekor qilish
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await saveExamGrade(paperResult);
+                  setPaperResult(null);
+                  playBeep('success');
+                } catch (e) {
+                  alert('Saqlashda xatolik yuz berdi');
+                }
+              }}
+              className="flex-1 h-12 bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-200"
+            >
+              Saqlash
+            </button>
+          </div>
+        </div>
+      )}
+
       {scans.length > 0 && (
         <div className="bg-white rounded-2xl p-4 shadow-sm">
           <h2 className="text-sm font-semibold text-zinc-900 mb-2">
@@ -645,7 +614,6 @@ export default function MobileScanner() {
         </div>
       )}
 
-      {/* Yakunlash tugmasi */}
       <button
         onClick={handleFinish}
         disabled={loading}
