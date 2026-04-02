@@ -53,7 +53,6 @@ const getGradeStyle = (score: number | null, max: number | null) => {
 };
 
 export default function Grading() {
-  const { t: _t } = useTranslation();
   const navigate = useNavigate();
   const [selectedClassId, setSelectedClassId] = useState<string | null>('7-D');
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState<boolean>(false);
