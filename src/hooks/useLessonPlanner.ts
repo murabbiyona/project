@@ -14,10 +14,16 @@ export type BloomLevel =
 export interface LessonPlanParams {
   classId: string
   subjectId: string
+  subject?: string
   topic: string
   planningModel: PlanningModel
   bloomLevel?: BloomLevel
   duration?: number // minutes
+}
+
+export interface GeneratePlanResult {
+  plan: GeneratedLessonPlan | null
+  error: string | null
 }
 
 export interface GeneratedLessonPlan {
@@ -35,9 +41,10 @@ export interface GeneratedLessonPlan {
 
 // ─── Planning model prompt builders ───────────────────────────────────────────
 
-function build5EPrompt(topic: string, bloom: string, duration: number): string {
+function build5EPrompt(subject: string, topic: string, bloom: string, duration: number): string {
   return `Sen tajribali pedagog-metodistsisan. Quyidagi mavzu bo'yicha 5E modelida dars rejasini tuzing.
 
+Fan: ${subject}
 Mavzu: ${topic}
 Bloom darajasi: ${bloom}
 Davomiyligi: ${duration} daqiqa
@@ -86,12 +93,14 @@ Javobni JSON formatida quyidagi strukturada bering:
 }
 
 function buildSMARTPrompt(
+  subject: string,
   topic: string,
   bloom: string,
   duration: number
 ): string {
   return `Sen tajribali pedagog-metodistsisan. Quyidagi mavzu bo'yicha SMART maqsadlar asosida dars rejasini tuzing.
 
+Fan: ${subject}
 Mavzu: ${topic}
 Bloom darajasi: ${bloom}
 Davomiyligi: ${duration} daqiqa
@@ -139,6 +148,7 @@ Javobni JSON formatida bering:
 }
 
 function build2080Prompt(
+  subject: string,
   topic: string,
   bloom: string,
   duration: number
@@ -148,6 +158,7 @@ function build2080Prompt(
 
   return `Sen tajribali pedagog-metodistsisan. Quyidagi mavzu bo'yicha 20/80 modelida dars rejasini tuzing.
 
+Fan: ${subject}
 Mavzu: ${topic}
 Bloom darajasi: ${bloom}
 Davomiyligi: ${duration} daqiqa
@@ -195,12 +206,14 @@ Javobni JSON formatida bering:
 }
 
 function buildBackwardDesignPrompt(
+  subject: string,
   topic: string,
   bloom: string,
   duration: number
 ): string {
   return `Sen tajribali pedagog-metodistsisan. Quyidagi mavzu bo'yicha Backward Design (Teskari loyihalash) modelida dars rejasini tuzing.
 
+Fan: ${subject}
 Mavzu: ${topic}
 Bloom darajasi: ${bloom}
 Davomiyligi: ${duration} daqiqa
@@ -272,27 +285,29 @@ export function useLessonPlanner() {
   function buildPrompt(params: LessonPlanParams): string {
     const bloom = params.bloomLevel || 'understand'
     const duration = params.duration || 45
+    const subject = params.subject?.trim() || params.subjectId || "Ko'rsatilmagan"
 
     switch (params.planningModel) {
       case '5E':
-        return build5EPrompt(params.topic, bloom, duration)
+        return build5EPrompt(subject, params.topic, bloom, duration)
       case 'SMART':
-        return buildSMARTPrompt(params.topic, bloom, duration)
+        return buildSMARTPrompt(subject, params.topic, bloom, duration)
       case '20/80':
-        return build2080Prompt(params.topic, bloom, duration)
+        return build2080Prompt(subject, params.topic, bloom, duration)
       case 'backward_design':
-        return buildBackwardDesignPrompt(params.topic, bloom, duration)
+        return buildBackwardDesignPrompt(subject, params.topic, bloom, duration)
       default:
-        return build5EPrompt(params.topic, bloom, duration)
+        return build5EPrompt(subject, params.topic, bloom, duration)
     }
   }
 
   // Call the edge function and parse the response into a structured plan
   const generatePlan = useCallback(
-    async (params: LessonPlanParams) => {
+    async (params: LessonPlanParams): Promise<GeneratePlanResult> => {
       if (!user || !session) {
-        setError('Tizimga kiring')
-        return null
+        const msg = 'Tizimga kiring'
+        setError(msg)
+        return { plan: null, error: msg }
       }
 
       setError(null)
@@ -363,10 +378,11 @@ export function useLessonPlanner() {
         }
 
         setGeneratedPlan(plan)
-        return plan
+        return { plan, error: null }
       } catch (e: any) {
-        setError(e.message || 'Dars reja yaratishda xatolik')
-        return null
+        const msg = e.message || 'Dars reja yaratishda xatolik'
+        setError(msg)
+        return { plan: null, error: msg }
       } finally {
         setLoading(false)
       }

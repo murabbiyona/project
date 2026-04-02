@@ -69,8 +69,8 @@ function toStudents(list: { id: string; name: string; initials: string }[]): Stu
       birth_date: null,
       gender: null,
       photo_url: null,
-      status: 'active' as const,
-      tags: [],
+      qr_code: null,
+      is_active: true,
       created_at: '',
       updated_at: '',
     } as Student

@@ -102,7 +102,7 @@ export const teacherMobileTabs: TeacherMobileTab[] = [
 
 export const teacherMobileRouteMeta: TeacherMobileRouteMeta[] = [
   { path: '/mobile', title: 'Bugungi oqim', eyebrow: 'Ustoz mobile', exact: true },
-  { path: '/mobile/scanner', title: 'QR davomat', eyebrow: 'Jonli sessiya' },
+  { path: '/mobile/scanner', title: 'QR Vision', eyebrow: 'Test tekshiruvi' },
   { path: '/mobile/remote', title: 'Pult rejimi', eyebrow: 'Tezkor baholash' },
   { path: '/mobile/grades', title: "Ro'yxat baholari", eyebrow: 'Sinf jurnali' },
   { path: '/mobile/profile', title: 'Profil va sozlamalar', eyebrow: 'Shaxsiy kabinet' },
@@ -119,11 +119,11 @@ export function getTeacherMobileRouteMeta(pathname: string) {
 
 export const teacherQuickActions: TeacherQuickAction[] = [
   {
-    label: 'QR Davomat',
-    desc: 'Kamera bilan',
+    label: 'QR Vision',
+    desc: 'Test tekshiruvi',
     icon: QrCode,
-    gradient: 'from-emerald-500 to-teal-500',
-    glow: 'shadow-emerald-200/80',
+    gradient: 'from-indigo-500 to-violet-500',
+    glow: 'shadow-indigo-200/80',
     link: '/mobile/scanner',
   },
   {
