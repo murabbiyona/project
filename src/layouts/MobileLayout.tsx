@@ -85,26 +85,6 @@ export default function MobileLayout() {
               Ustoz App
             </span>
           </div>
-
-          <motion.div
-            key={routeMeta.path}
-            variants={fadeUpItem}
-            initial="hidden"
-            animate="show"
-            className="mt-4 rounded-[24px] bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-800 px-4 py-3 text-white shadow-xl shadow-zinc-900/10"
-          >
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">{routeMeta.eyebrow}</p>
-            <div className="mt-1 flex items-end justify-between gap-3">
-              <div>
-                <h1 className="text-lg font-semibold">{routeMeta.title}</h1>
-                <p className="text-xs text-zinc-400">Yangi xususiyatlar qo‘shishga tayyor mobil shell</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 px-2.5 py-1.5 text-right">
-                <p className="text-[10px] text-zinc-400">Holat</p>
-                <p className="text-xs font-semibold text-emerald-300">Live UI</p>
-              </div>
-            </div>
-          </motion.div>
         </motion.header>
 
         <motion.nav
