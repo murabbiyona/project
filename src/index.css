@@ -39,14 +39,14 @@
 
   /* Custom Scrollbar from Source */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 4px;
+    height: 4px;
   }
   ::-webkit-scrollbar-button {
     display: none;
   }
   ::-webkit-scrollbar-thumb {
-    background: #18181b;
+    background: #cbd5e1;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-track {

@@ -1,5 +1,6 @@
+import { useState, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { GraduationCap, Sparkles } from 'lucide-react';
 import { getTeacherMobileRouteMeta, teacherMobileTabs } from '../data/teacherMobile';
 import { fadeUpItem, floatingLoop, pageTransition } from '../lib/mobileMotion';
@@ -7,17 +8,66 @@ import { fadeUpItem, floatingLoop, pageTransition } from '../lib/mobileMotion';
 export default function MobileLayout() {
   const location = useLocation();
   const routeMeta = getTeacherMobileRouteMeta(location.pathname);
+  
+  const mainRef = useRef<HTMLElement>(null);
+  const { scrollY } = useScroll({ container: mainRef });
+  
+  const [showHeader, setShowHeader] = useState(true);
+  const [showNav, setShowNav] = useState(true);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious() ?? 0;
+    const diff = latest - previous;
+    
+    if (latest <= 60) {
+      // Eng tepada bo'lsa, ikkalasini ham ko'rsatamiz
+      setShowHeader(true);
+      setShowNav(true);
+      return;
+    }
+    
+    if (Math.abs(diff) < 5) return; // Kichik o'zgarishlarni e'tiborsiz qoldiramiz
+    
+    if (diff > 0) {
+      // Pastga qarab scroll qilib ketyapmiz
+      setShowHeader(false);
+      setShowNav(true);
+    } else {
+      // Tepaga qarab scroll qilyapmiz
+      setShowHeader(true);
+      setShowNav(false);
+    }
+  });
 
   return (
     <div className="min-h-[100dvh] bg-[radial-gradient(circle_at_top,#e8fff5,transparent_28%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_45%,#eef2ff_100%)] flex justify-center">
-      <div className="w-full max-w-md relative flex min-h-[100dvh] flex-col overflow-hidden">
+      <div className="w-full max-w-md relative flex h-[100dvh] flex-col overflow-hidden bg-transparent">
         <motion.div
           aria-hidden
           animate={floatingLoop}
           className="pointer-events-none absolute right-[-60px] top-14 h-44 w-44 rounded-full bg-emerald-300/20 blur-3xl"
         />
 
-        <header className="sticky top-0 z-50 shrink-0 border-b border-white/60 bg-white/80 px-4 pb-4 pt-3 backdrop-blur-xl">
+        {/* Scrollable Main Area - Absolute positioned */}
+        <motion.main
+          ref={mainRef}
+          key={location.pathname}
+          variants={pageTransition}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          // Ekranning yuqori va pastki qismi absolute panellar ostida yopilib qolmasligi uchun padding beramiz
+          className="absolute inset-0 overflow-y-auto overflow-x-hidden pt-[80px] pb-[80px] px-4"
+        >
+          <Outlet />
+        </motion.main>
+
+        <motion.header
+          initial={{ y: 0 }}
+          animate={{ y: showHeader ? 0 : "-100%" }}
+          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+          className="absolute top-0 left-0 right-0 z-50 border-b border-white/60 bg-white/80 px-4 pb-4 pt-3 backdrop-blur-xl"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-zinc-900 text-white shadow-lg shadow-zinc-900/10">
@@ -35,44 +85,16 @@ export default function MobileLayout() {
               Ustoz App
             </span>
           </div>
+        </motion.header>
 
-          <motion.div
-            key={routeMeta.path}
-            variants={fadeUpItem}
-            initial="hidden"
-            animate="show"
-            className="mt-4 rounded-[24px] bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-800 px-4 py-3 text-white shadow-xl shadow-zinc-900/10"
-          >
-            <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">{routeMeta.eyebrow}</p>
-            <div className="mt-1 flex items-end justify-between gap-3">
-              <div>
-                <h1 className="text-lg font-semibold">{routeMeta.title}</h1>
-                <p className="text-xs text-zinc-400">Yangi xususiyatlar qo‘shishga tayyor mobil shell</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 px-2.5 py-1.5 text-right">
-                <p className="text-[10px] text-zinc-400">Holat</p>
-                <p className="text-xs font-semibold text-emerald-300">Live UI</p>
-              </div>
-            </div>
-          </motion.div>
-        </header>
-
-        <motion.main
-          key={location.pathname}
-          variants={pageTransition}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          className="flex-1 overflow-y-auto px-4 py-4 pb-24"
+        <motion.nav
+          initial={{ y: 0 }}
+          animate={{ y: showNav ? 0 : "100%" }}
+          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+          className="absolute bottom-0 left-0 right-0 z-50 w-full bg-white/90 px-1.5 pt-1.5 backdrop-blur-2xl shadow-[0_-16px_40px_rgba(0,0,0,0.05)] rounded-t-[32px] border-t border-white/60"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
         >
-          <Outlet />
-        </motion.main>
-
-        <nav
-          className="sticky bottom-0 z-50 shrink-0 border-t border-white/70 bg-white/85 px-2 pt-2 backdrop-blur-xl"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        >
-          <div className="flex items-center justify-around rounded-t-3xl">
+          <div className="flex items-center justify-around w-full relative">
             {teacherMobileTabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -81,28 +103,47 @@ export default function MobileLayout() {
                   to={tab.to}
                   end={tab.end}
                   className={({ isActive }) =>
-                    `flex min-w-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 transition-all ${
-                      isActive ? 'text-emerald-600' : 'text-zinc-400 active:text-zinc-600'
+                    `flex flex-1 flex-col items-center justify-center gap-1 rounded-xl py-1.5 relative transition-all duration-300 ${
+                      isActive ? 'text-emerald-600' : 'text-zinc-400'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <div
-                        className={`rounded-2xl p-2 transition-all ${
-                          isActive ? 'bg-emerald-50 shadow-inner shadow-emerald-100' : ''
+                      <motion.div
+                        whileTap={{ scale: 0.85 }}
+                        animate={{ 
+                          scale: isActive ? 1.05 : 1,
+                          y: isActive ? -1 : 0
+                        }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        className={`relative rounded-2xl p-1.5 transition-colors duration-300 ${
+                          isActive 
+                            ? 'bg-emerald-50/80 text-emerald-600' 
+                            : 'bg-transparent text-zinc-400'
                         }`}
                       >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+                        <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
+                        
+                        {/* Faol bo'lgandagi animatsiyali nuqta */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="mobileNavIndicator"
+                            className="absolute -bottom-2.5 left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-emerald-500"
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
+                        )}
+                      </motion.div>
+                      <span className={`text-[9px] uppercase tracking-wide transition-all duration-300 ${isActive ? 'font-bold opacity-100' : 'font-medium opacity-60'}`}>
+                        {tab.label}
+                      </span>
                     </>
                   )}
                 </NavLink>
               );
             })}
           </div>
-        </nav>
+        </motion.nav>
       </div>
     </div>
   );
