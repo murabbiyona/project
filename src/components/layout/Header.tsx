@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Bell, X, Circle, Globe, Sun } from 'lucide-react';
+import { Search, Bell, X, Circle, Globe, Sun, GraduationCap, PanelLeftClose, Maximize, PanelLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-export default function Header() {
+interface HeaderProps {
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+}
+
+export default function Header({ sidebarOpen = true, onToggleSidebar }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const { profile } = useAuth();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const location = useLocation();
 
   const changeLanguage = (lng: string) => {
@@ -16,12 +22,67 @@ export default function Header() {
     setShowLangMenu(false);
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   return (
     <>
       <header className="group/header-left flex items-center border-b border-border bg-card shrink-0 z-20 sticky top-0 h-[var(--top-header-height)]">
-        {/* Left side spacer - matches sidebar width when expanded */}
-        <div className="hidden md:flex items-center shrink-0 w-[var(--sidebar-width)] pl-[18px]">
-          {/* Logo is handled by Sidebar in this layout version, but we keep the spacing */}
+        {/* Left section: Logo + Sidebar toggle + Fullscreen icon — Desktop */}
+        <div className="hidden md:flex items-center shrink-0 w-[var(--sidebar-width)] pl-[18px] transition-[width] duration-200">
+          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="h-7 w-7 rounded-lg bg-[#2e3138] flex items-center justify-center shrink-0">
+              <GraduationCap className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-[18px] text-foreground font-medium whitespace-nowrap">
+              <span style={{ letterSpacing: '-0.05em', fontWeight: 600 }}>Murabbiyona</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-0.5 ml-auto mr-1">
+            <button
+              onClick={onToggleSidebar}
+              className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors cursor-pointer"
+              title={sidebarOpen ? 'Yopish' : 'Ochish'}
+            >
+              {sidebarOpen ? (
+                <PanelLeftClose className="size-[18px] text-muted-foreground" />
+              ) : (
+                <PanelLeft className="size-[18px] text-muted-foreground" />
+              )}
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors cursor-pointer"
+              title={isFullscreen ? 'Oyna rejimi' : 'To\'liq ekran'}
+            >
+              <Maximize className="size-[18px] text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile left: Sidebar trigger + Logo */}
+        <div className="flex md:hidden items-center gap-2 pl-4">
+          <button
+            onClick={onToggleSidebar}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors cursor-pointer"
+          >
+            <PanelLeft className="size-[18px]" />
+          </button>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-[#2e3138] flex items-center justify-center shrink-0">
+              <GraduationCap className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-[18px] text-foreground font-medium">
+              <span style={{ letterSpacing: '-0.05em', fontWeight: 600 }}>Murabbiyona</span>
+            </span>
+          </Link>
         </div>
 
         <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center min-w-0 pr-8 lg:pr-12">
@@ -41,7 +102,7 @@ export default function Header() {
               className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105
                 ${location.pathname === '/feedback' ? 'text-white bg-zinc-900 shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
             >
-              Feedback
+              {t('header.feedback')}
             </Link>
           </nav>
 

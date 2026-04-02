@@ -19,127 +19,97 @@ export function useVoiceGrading(classId: string, subjectId: string) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<VoiceGradeResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const speechRecognitionRef = useRef<any>(null)
-  const speechTranscriptRef = useRef<string>('')
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
   const startRecording = useCallback(async () => {
     try {
       setError(null)
       setResult(null)
-      speechTranscriptRef.current = ''
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+      mediaRecorderRef.current = mediaRecorder
+      chunksRef.current = []
 
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-
-      if (!SpeechRecognition) {
-        setError('Brauzer ovoz tanishni qo\'llab-quvvatlamaydi. Chrome yoki Edge brauzerdan foydalaning.')
-        return
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
       }
 
-      const recognition = new SpeechRecognition()
-      recognition.lang = 'uz-UZ'
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.maxAlternatives = 1
-
-      recognition.onresult = (event: any) => {
-        let fullTranscript = ''
-        for (let i = 0; i < event.results.length; i++) {
-          fullTranscript += event.results[i][0].transcript + ' '
-        }
-        speechTranscriptRef.current = fullTranscript.trim()
-      }
-
-      recognition.onerror = (event: any) => {
-        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-          setError('Mikrofonga ruxsat berilmadi. Brauzer sozlamalaridan mikrofonga ruxsat bering.')
-          setIsRecording(false)
-        } else if (event.error === 'no-speech') {
-          // Ovoz eshitilmasa davom etamiz, foydalanuvchi to'xtatganda xabar beramiz
-        } else if (event.error !== 'aborted') {
-          setError('Ovoz tanish xatosi: ' + event.error)
-          setIsRecording(false)
-        }
-      }
-
-      recognition.onend = () => {
-        // Agar foydalanuvchi to'xtatmagan bo'lsa, qayta ishga tushiramiz
-        if (speechRecognitionRef.current && isRecording) {
-          try {
-            recognition.start()
-          } catch (_) {
-            // Ignore — already stopped
-          }
-        }
-      }
-
-      speechRecognitionRef.current = recognition
-      recognition.start()
+      mediaRecorder.start()
       setIsRecording(true)
     } catch (err) {
       setError('Mikrofonga ruxsat berilmadi')
     }
-  }, [isRecording])
+  }, [])
 
   const stopRecording = useCallback(async (students: Student[]) => {
-    // Web Speech API to'xtatish
-    const recognition = speechRecognitionRef.current
-    speechRecognitionRef.current = null
+    if (!mediaRecorderRef.current) return
 
-    if (recognition) {
-      try {
-        recognition.stop()
-      } catch (_) {
-        // Ignore
+    return new Promise<VoiceGradeResult | null>((resolve) => {
+      mediaRecorderRef.current!.onstop = async () => {
+        setIsRecording(false)
+        setIsProcessing(true)
+
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const result = await processAudio(audioBlob, students)
+
+        // Stop all tracks
+        mediaRecorderRef.current?.stream.getTracks().forEach(t => t.stop())
+
+        setIsProcessing(false)
+        setResult(result)
+        resolve(result)
+      }
+      mediaRecorderRef.current!.stop()
+    })
+  }, [])
+
+  async function processAudio(audioBlob: Blob, students: Student[]): Promise<VoiceGradeResult> {
+    try {
+      // Whisper API orqali transkripsiya
+      const formData = new FormData()
+      formData.append('file', audioBlob, 'voice.webm')
+      formData.append('model', 'whisper-1')
+      formData.append('language', 'uz')
+
+      const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+        },
+        body: formData,
+      })
+
+      if (!whisperResponse.ok) {
+        throw new Error('Whisper API xatosi')
+      }
+
+      const { text: transcript } = await whisperResponse.json()
+
+      // Transkripsiyadan ism va baho ajratib olish
+      const parsed = parseTranscript(transcript, students)
+
+      return parsed
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Xatolik yuz berdi')
+      return {
+        transcript: '',
+        detectedName: null,
+        detectedScore: null,
+        matchedStudent: null,
+        candidateStudents: [],
+        confidence: 0,
+        status: 'rejected',
       }
     }
-
-    setIsRecording(false)
-    setIsProcessing(true)
-
-    // Kichik kutish — oxirgi natija kelishi uchun
-    await new Promise(r => setTimeout(r, 500))
-
-    const transcript = speechTranscriptRef.current
-    if (!transcript) {
-      setError('Ovoz eshitilmadi. Aniqroq gapiring va qaytadan urinib ko\'ring.')
-      setIsProcessing(false)
-      return null
-    }
-
-    const voiceResult = parseTranscript(transcript, students)
-    setIsProcessing(false)
-    setResult(voiceResult)
-    return voiceResult
-  }, [])
+  }
 
   function parseTranscript(transcript: string, students: Student[]): VoiceGradeResult {
     const text = transcript.toLowerCase().trim()
 
-    // Raqamlarni topish (baho) — o'zbekcha so'zlar ham tekshiriladi
-    const uzbekNumbers: Record<string, number> = {
-      'bir': 1, 'ikki': 2, 'uch': 3, 'to\'rt': 4, 'tort': 4, 'besh': 5,
-      'olti': 6, 'yetti': 7, 'sakkiz': 8, 'to\'qqiz': 9, 'toqqiz': 9, 'o\'n': 10, 'on': 10,
-      'yigirma': 20, 'o\'ttiz': 30, 'ottiz': 30, 'qirq': 40, 'ellik': 50,
-      'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90, 'toqson': 90, 'yuz': 100,
-    }
-
-    let detectedScore: number | null = null
-
-    // Raqamlarni tekshirish
+    // Raqamlarni topish (baho)
     const numberMatch = text.match(/(\d+)/g)
-    if (numberMatch) {
-      detectedScore = parseInt(numberMatch[numberMatch.length - 1])
-    }
-
-    // O'zbekcha raqamlarni tekshirish
-    if (!detectedScore) {
-      for (const [word, num] of Object.entries(uzbekNumbers)) {
-        if (text.includes(word)) {
-          detectedScore = num
-          break
-        }
-      }
-    }
+    const detectedScore = numberMatch ? parseInt(numberMatch[numberMatch.length - 1]) : null
 
     // Ismni topish — har bir talaba ismini tekshirish
     const candidates: { student: Student; similarity: number }[] = []

@@ -16,12 +16,6 @@ import {
   Users,
   ChevronDown,
 } from 'lucide-react';
-import {
-  useLessonPlanner,
-  type GeneratedLessonPlan,
-  type BloomLevel,
-  type PlanningModel as ApiPlanningModel,
-} from '../hooks/useLessonPlanner';
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface ChatMessage {
@@ -98,29 +92,6 @@ const BLOOM_LEVELS = [
 
 const DURATIONS = [35, 40, 45, 80];
 
-const MODEL_TO_API_MODEL: Record<string, ApiPlanningModel> = {
-  '5e': '5E',
-  smart: 'SMART',
-  '2080': '20/80',
-  backward: 'backward_design',
-};
-
-const API_MODEL_LABEL: Record<ApiPlanningModel, string> = {
-  '5E': '5E Model',
-  SMART: 'SMART Model',
-  '20/80': '20/80 Model',
-  backward_design: 'Backward Design',
-};
-
-const BLOOM_TO_API_LEVEL: Record<string, BloomLevel> = {
-  Eslash: 'remember',
-  Tushunish: 'understand',
-  "Qo'llash": 'apply',
-  Tahlil: 'analyze',
-  Baholash: 'evaluate',
-  Sintez: 'create',
-};
-
 const MOCK_PLAN = {
   title: "Pythagor teoremasi",
   model: "5E Model",
@@ -153,133 +124,6 @@ const MOCK_PLAN = {
     },
   ],
 };
-
-interface PlanSectionView {
-  name: string;
-  time: string;
-  content: string;
-}
-
-const SECTION_NAME_MAP: Record<string, string> = {
-  engage: 'Jalb qilish (Engage)',
-  explore: 'Tadqiq qilish (Explore)',
-  explain: 'Tushuntirish (Explain)',
-  elaborate: 'Kengaytirish (Elaborate)',
-  evaluate: 'Baholash (Evaluate)',
-  opening: 'Kirish bosqichi',
-  main_activities: 'Asosiy faoliyatlar',
-  assessment: 'Baholash',
-  closing: 'Yakunlash',
-  teacher_led: "O'qituvchi boshqaradigan qism",
-  student_led: "O'quvchi boshqaradigan qism",
-  transitions: "O'tish bosqichlari",
-  stage1_desired_results: '1-bosqich: Kerakli natijalar',
-  stage2_assessment_evidence: '2-bosqich: Baholash dalillari',
-  stage3_learning_plan: "3-bosqich: O'rganish rejasi",
-  smart_objectives: 'SMART maqsadlar',
-};
-
-function formatSectionName(key: string): string {
-  if (SECTION_NAME_MAP[key]) return SECTION_NAME_MAP[key];
-  return key
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-function normalizeContent(value: unknown): string {
-  if (typeof value === 'string') return value.trim();
-  if (typeof value === 'number') return String(value);
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => normalizeContent(item))
-      .filter(Boolean)
-      .join('; ');
-  }
-  if (value && typeof value === 'object') {
-    const objectValues = Object.values(value as Record<string, unknown>)
-      .map((item) => normalizeContent(item))
-      .filter(Boolean);
-    return objectValues.join('; ');
-  }
-  return '';
-}
-
-function extractPlanSections(plan: GeneratedLessonPlan): PlanSectionView[] {
-  const lessonStructure = plan.lesson_structure;
-  if (lessonStructure && typeof lessonStructure === 'object' && !Array.isArray(lessonStructure)) {
-    const entries = Object.entries(lessonStructure as Record<string, unknown>);
-    const sections = entries
-      .map(([key, value]) => {
-        if (!value) return null;
-
-        let time = '';
-        let content = '';
-
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          const section = value as Record<string, unknown>;
-          if (typeof section.duration === 'number') {
-            time = `${section.duration} daqiqa`;
-          }
-
-          const parts: string[] = [];
-          if (section.description) parts.push(normalizeContent(section.description));
-          if (section.teacher_notes) parts.push(normalizeContent(section.teacher_notes));
-          if (section.activities) parts.push(`Faoliyatlar: ${normalizeContent(section.activities)}`);
-          if (section.materials) parts.push(`Materiallar: ${normalizeContent(section.materials)}`);
-          if (section.segments) parts.push(`Bosqichlar: ${normalizeContent(section.segments)}`);
-          if (section.learning_objectives) {
-            parts.push(`Maqsadlar: ${normalizeContent(section.learning_objectives)}`);
-          }
-          if (section.big_ideas) parts.push(`Asosiy g'oyalar: ${normalizeContent(section.big_ideas)}`);
-          if (section.essential_questions) {
-            parts.push(`Muhim savollar: ${normalizeContent(section.essential_questions)}`);
-          }
-          if (section.other_evidence) parts.push(`Dalillar: ${normalizeContent(section.other_evidence)}`);
-
-          content = parts.filter(Boolean).join(' ');
-          if (!content) {
-            content = normalizeContent(section).slice(0, 600);
-          }
-        } else {
-          content = normalizeContent(value).slice(0, 600);
-        }
-
-        if (!content) return null;
-        return {
-          name: formatSectionName(key),
-          time,
-          content,
-        };
-      })
-      .filter((item): item is PlanSectionView => Boolean(item));
-
-    if (sections.length > 0) return sections;
-  }
-
-  const raw = (plan.raw_response || '')
-    .replace(/```json/gi, '')
-    .replace(/```/g, '')
-    .split(/\n{2,}/)
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .slice(0, 5);
-
-  if (raw.length > 0) {
-    return raw.map((part, idx) => ({
-      name: `Bo'lim ${idx + 1}`,
-      time: '',
-      content: part,
-    }));
-  }
-
-  return MOCK_PLAN.sections.map((section) => ({
-    name: section.name,
-    time: section.time,
-    content: section.content,
-  }));
-}
 
 // ── Component ──────────────────────────────────────────────────────────
 export default function AIPlanner() {
@@ -333,119 +177,62 @@ export default function AIPlanner() {
     }, 1000);
   };
 
-  const {
-    generatePlan,
-    loading: plannerLoading,
-    generatedPlan,
-    error: plannerError,
-  } = useLessonPlanner();
-  const [activeGeneratedPlan, setActiveGeneratedPlan] = useState<GeneratedLessonPlan | null>(null);
-
-  const currentPlan = activeGeneratedPlan || generatedPlan;
-  const effectiveGenerating = isGenerating || plannerLoading;
-  const selectedBloomForApi = selectedBlooms[0]
-    ? BLOOM_TO_API_LEVEL[selectedBlooms[0]]
-    : undefined;
-  const planSections = currentPlan ? extractPlanSections(currentPlan) : [];
-
-  const handleGeneratePlan = async () => {
-    if (!subject.trim() || !topic.trim()) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          role: 'ai',
-          text: "Iltimos, avval 'Fan' va 'Mavzu' maydonlarini to'ldiring.",
-        },
-      ]);
-      return;
-    }
-
+  const handleGenerate = () => {
     setIsGenerating(true);
-    setShowPlan(false);
-    setActiveGeneratedPlan(null);
-
-    const generationResult = await generatePlan({
-      classId: selectedClass || 'manual-input',
-      subjectId: subject.trim(),
-      topic: `${subject.trim()} fani: ${topic.trim()}`,
-      planningModel: MODEL_TO_API_MODEL[selectedModel] || '5E',
-      bloomLevel: selectedBloomForApi,
-      duration,
-    });
-
-    setIsGenerating(false);
-
-    if (!generationResult.plan) {
+    // Mock generation
+    setTimeout(() => {
+      setIsGenerating(false);
+      setShowPlan(true);
+      setActiveTab('plan');
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now(),
           role: 'ai',
-          text:
-            generationResult.error ||
-            plannerError ||
-            "Dars reja yaratishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+          text: "Dars reja tayyor! \"Dars reja\" tabiga o'ting ko'rish uchun. \u2728",
         },
       ]);
-      return;
-    }
-
-    setActiveGeneratedPlan(generationResult.plan);
-    setShowPlan(true);
-    setActiveTab('plan');
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        role: 'ai',
-        text: `"${subject.trim()}" fani bo'yicha dars reja tayyor! "Dars reja" tabiga o'ting ko'rish uchun. ✨`,
-      },
-    ]);
+    }, 2500);
   };
 
   const [configCollapsed, setConfigCollapsed] = useState(false);
 
   return (
-    <div className="relative h-full flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4 pb-2 overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_10%_0%,rgba(16,185,129,0.14),transparent_42%),radial-gradient(circle_at_90%_0%,rgba(99,102,241,0.12),transparent_38%),linear-gradient(180deg,#ffffff_0%,#f7f9ff_100%)]" />
-
+    <div className="flex-1 min-h-0 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-300 px-6 pt-4">
       {/* Page Header */}
-      <div className="mb-5 shrink-0 rounded-2xl border border-white/70 bg-white/85 px-5 py-4 backdrop-blur-xl shadow-[0_18px_55px_-35px_rgba(15,23,42,0.45)]">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-indigo-500/20 border border-emerald-500/20 shadow-[0_10px_24px_-16px_rgba(16,185,129,0.65)]">
-              <Brain className="size-6 text-emerald-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900">AI Dars Rejalashtirish</h1>
-              <p className="text-sm text-zinc-600">
-                Sun'iy intellekt yordamida professional dars rejalarini yarating
-              </p>
-            </div>
+      <div className="flex items-center justify-between mb-6 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20">
+            <Brain className="size-6 text-emerald-500" />
           </div>
-
-          {/* Credits Badge */}
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-100 border border-amber-300/70 shadow-[0_10px_30px_-20px_rgba(245,158,11,0.8)]"
-          >
-            <motion.div
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Sparkles className="size-4 text-amber-600" />
-            </motion.div>
-            <span className="text-sm font-semibold text-amber-700">
-              {credits} kredit qoldi
-            </span>
-          </motion.div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">AI Dars Rejalashtirish</h1>
+            <p className="text-sm text-muted-foreground">
+              Sun'iy intellekt yordamida professional dars rejalarini yarating
+            </p>
+          </div>
         </div>
+
+        {/* Credits Badge */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20"
+        >
+          <motion.div
+            animate={{ rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            <Sparkles className="size-4 text-amber-400" />
+          </motion.div>
+          <span className="text-sm font-semibold text-amber-300/90">
+            {credits} kredit qoldi
+          </span>
+        </motion.div>
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      <div className="flex-1 min-h-0 flex gap-5">
         {/* ─── LEFT SIDE: Configuration Panel ─── */}
         <AnimatePresence initial={false}>
           {!configCollapsed && (
@@ -454,12 +241,12 @@ export default function AIPlanner() {
               animate={{ width: 340, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="shrink-0 h-full min-h-0"
+              className="shrink-0 overflow-hidden"
             >
-              <div className="w-[340px] h-full min-h-0 flex flex-col gap-4 overflow-y-auto rounded-[22px] border border-white/80 bg-white/85 p-4 pr-3 pb-3 backdrop-blur-xl shadow-[0_25px_65px_-40px_rgba(15,23,42,0.5)]">
+              <div className="w-[340px] h-full flex flex-col gap-4 overflow-y-auto pr-2 pb-2">
           {/* Planning Model Selector */}
           <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-3 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
               Rejalashtirish modeli
             </label>
             <div className="grid grid-cols-2 gap-2.5">
@@ -471,29 +258,29 @@ export default function AIPlanner() {
                   onClick={() => setSelectedModel(model.id)}
                   className={`relative p-3.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
                     selectedModel === model.id
-                      ? `${model.bg} ${model.border} ring-2 ${model.ring} shadow-[0_12px_30px_-20px_rgba(16,185,129,0.8)]`
-                      : 'bg-white/80 border-zinc-200/80 hover:bg-white hover:border-zinc-300/80 shadow-sm'
+                      ? `${model.bg} ${model.border} ring-2 ${model.ring}`
+                      : 'bg-card border-border hover:bg-muted/50'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1.5">
                     <div
                       className={`p-1.5 rounded-lg ${
-                        selectedModel === model.id ? model.bg : 'bg-zinc-100'
+                        selectedModel === model.id ? model.bg : 'bg-muted'
                       }`}
                     >
-                      <span className={selectedModel === model.id ? model.color : 'text-zinc-500'}>
+                      <span className={selectedModel === model.id ? model.color : 'text-muted-foreground'}>
                         {model.icon}
                       </span>
                     </div>
                     <span
                       className={`text-sm font-bold ${
-                        selectedModel === model.id ? model.color : 'text-zinc-800'
+                        selectedModel === model.id ? model.color : 'text-foreground'
                       }`}
                     >
                       {model.title}
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-500/90 leading-snug line-clamp-2">
+                  <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
                     {model.subtitle}
                   </p>
                   {selectedModel === model.id && (
@@ -509,19 +296,19 @@ export default function AIPlanner() {
 
           {/* Class Selector */}
           <div className="relative">
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-2 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
               <Users className="size-3.5 inline mr-1.5 -mt-0.5" />
               Sinf
             </label>
             <button
               onClick={() => setClassDropdownOpen(!classDropdownOpen)}
-              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/80 border border-zinc-200/80 hover:bg-white hover:border-zinc-300/80 transition-colors text-sm cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-card border border-border hover:bg-muted/50 transition-colors text-sm cursor-pointer"
             >
-              <span className={selectedClass ? 'text-zinc-900 font-medium' : 'text-zinc-500'}>
+              <span className={selectedClass ? 'text-foreground font-medium' : 'text-muted-foreground'}>
                 {selectedClass || 'Sinfni tanlang'}
               </span>
               <ChevronDown
-                className={`size-4 text-zinc-400 transition-transform ${
+                className={`size-4 text-muted-foreground transition-transform ${
                   classDropdownOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -532,7 +319,7 @@ export default function AIPlanner() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute z-20 mt-1 w-full rounded-xl bg-white/95 border border-zinc-200/90 shadow-[0_24px_45px_-30px_rgba(15,23,42,0.6)] backdrop-blur-xl overflow-hidden"
+                  className="absolute z-20 mt-1 w-full rounded-xl bg-card border border-border shadow-xl overflow-hidden"
                 >
                   {CLASSES.map((cls) => (
                     <button
@@ -541,8 +328,8 @@ export default function AIPlanner() {
                         setSelectedClass(cls);
                         setClassDropdownOpen(false);
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-zinc-100/70 transition-colors cursor-pointer ${
-                        selectedClass === cls ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-zinc-700'
+                      className={`w-full px-4 py-2.5 text-left text-sm hover:bg-muted/60 transition-colors cursor-pointer ${
+                        selectedClass === cls ? 'bg-muted font-semibold' : ''
                       }`}
                     >
                       {cls} sinf
@@ -555,7 +342,7 @@ export default function AIPlanner() {
 
           {/* Subject Input */}
           <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-2 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
               <BookOpen className="size-3.5 inline mr-1.5 -mt-0.5" />
               Fan
             </label>
@@ -564,13 +351,13 @@ export default function AIPlanner() {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Masalan: Matematika"
-              className="w-full px-4 py-2.5 rounded-xl bg-white/80 border border-zinc-200/80 text-sm placeholder:text-zinc-500/80 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400/70 focus:bg-white transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30 transition-all"
             />
           </div>
 
           {/* Topic Input */}
           <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-2 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
               <GraduationCap className="size-3.5 inline mr-1.5 -mt-0.5" />
               Mavzu
             </label>
@@ -579,13 +366,13 @@ export default function AIPlanner() {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Masalan: Pythagor teoremasi"
-              className="w-full px-4 py-2.5 rounded-xl bg-white/80 border border-zinc-200/80 text-sm placeholder:text-zinc-500/80 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400/70 focus:bg-white transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30 transition-all"
             />
           </div>
 
           {/* Bloom's Taxonomy */}
           <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-2.5 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 block">
               Blum taksonomiyasi darajasi
             </label>
             <div className="flex flex-wrap gap-2">
@@ -598,7 +385,7 @@ export default function AIPlanner() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                     selectedBlooms.includes(level.label)
                       ? level.color
-                      : 'bg-white/70 text-zinc-600 border-zinc-200/80 hover:border-zinc-300'
+                      : 'bg-muted/40 text-muted-foreground border-transparent'
                   }`}
                 >
                   {level.label}
@@ -609,7 +396,7 @@ export default function AIPlanner() {
 
           {/* Duration Selector */}
           <div>
-            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-2.5 block">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 block">
               <Clock className="size-3.5 inline mr-1.5 -mt-0.5" />
               Dars davomiyligi
             </label>
@@ -622,8 +409,8 @@ export default function AIPlanner() {
                   onClick={() => setDuration(d)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
                     duration === d
-                      ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40 ring-2 ring-emerald-500/20 shadow-[0_10px_25px_-18px_rgba(16,185,129,0.8)]'
-                      : 'bg-white/75 border-zinc-200/80 text-zinc-600 hover:bg-white hover:border-zinc-300'
+                      ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30 ring-2 ring-emerald-500/20'
+                      : 'bg-card border-border text-muted-foreground hover:bg-muted/50'
                   }`}
                 >
                   {d} daq
@@ -636,12 +423,12 @@ export default function AIPlanner() {
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleGeneratePlan}
-            disabled={effectiveGenerating}
-            className="relative w-full py-3.5 rounded-2xl font-bold text-white text-[15px] bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 hover:from-emerald-600 hover:via-teal-600 hover:to-indigo-600 transition-all shadow-[0_20px_35px_-20px_rgba(16,185,129,0.85)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="relative w-full py-3.5 rounded-xl font-bold text-white text-[15px] bg-gradient-to-r from-emerald-500 to-indigo-500 hover:from-emerald-600 hover:to-indigo-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
-              {effectiveGenerating ? (
+              {isGenerating ? (
                 <>
                   <motion.div
                     animate={{ rotate: 360 }}
@@ -659,7 +446,7 @@ export default function AIPlanner() {
               )}
             </span>
             {/* Shimmer effect */}
-            {!effectiveGenerating && (
+            {!isGenerating && (
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 animate={{ x: ['-100%', '100%'] }}
@@ -673,30 +460,30 @@ export default function AIPlanner() {
         </AnimatePresence>
 
         {/* ─── Collapse/Expand Toggle ─── */}
-        <div className="shrink-0 flex items-center">
+        <div className="shrink-0 flex items-start pt-2">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setConfigCollapsed(!configCollapsed)}
-            className="group relative w-9 h-16 rounded-2xl border border-white/75 bg-white/80 backdrop-blur-xl shadow-[0_18px_40px_-30px_rgba(15,23,42,0.6)] hover:border-emerald-300/60 flex items-center justify-center transition-all hover:shadow-[0_20px_45px_-30px_rgba(16,185,129,0.45)] cursor-pointer"
+            className="group relative w-8 h-14 rounded-xl bg-card border border-border hover:border-emerald-500/30 flex items-center justify-center transition-all hover:shadow-lg hover:shadow-emerald-500/5 cursor-pointer"
             title={configCollapsed ? "Panelni ochish" : "Panelni yopish"}
           >
             <motion.div
               animate={{ rotate: configCollapsed ? 0 : 180 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             >
-              <ChevronDown className="size-4 text-zinc-400 group-hover:text-emerald-600 transition-colors -rotate-90" />
+              <ChevronDown className="size-4 text-muted-foreground group-hover:text-emerald-500 transition-colors -rotate-90" />
             </motion.div>
             {/* Decorative dots */}
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-emerald-400/40" />
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-emerald-400/40" />
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-emerald-500/20" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-emerald-500/20" />
           </motion.button>
         </div>
 
         {/* ─── RIGHT SIDE: Chat & Result Panel ─── */}
-        <div className="flex-1 min-w-0 h-full min-h-0 flex flex-col rounded-[24px] border border-white/80 bg-white/85 backdrop-blur-xl shadow-[0_28px_70px_-45px_rgba(15,23,42,0.6)] overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col min-h-0 bg-card rounded-2xl border border-border overflow-hidden">
           {/* Tab Switcher */}
-          <div className="flex shrink-0 gap-2 p-2.5 border-b border-zinc-200/70 bg-gradient-to-r from-white via-emerald-50/50 to-indigo-50/45">
+          <div className="flex shrink-0 border-b border-border">
             {[
               { key: 'chat' as const, label: 'Chat', icon: <MessageSquare className="size-4" /> },
               { key: 'plan' as const, label: 'Dars reja', icon: <FileText className="size-4" /> },
@@ -704,10 +491,10 @@ export default function AIPlanner() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer relative ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all cursor-pointer relative ${
                   activeTab === tab.key
-                    ? 'bg-white text-zinc-900 shadow-[0_10px_26px_-20px_rgba(15,23,42,0.8)]'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/70'
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground/70'
                 }`}
               >
                 {tab.icon}
@@ -715,7 +502,7 @@ export default function AIPlanner() {
                 {activeTab === tab.key && (
                   <motion.div
                     layoutId="tab-underline"
-                    className="absolute inset-x-5 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-indigo-500"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-indigo-500"
                   />
                 )}
                 {tab.key === 'plan' && showPlan && (
@@ -737,7 +524,7 @@ export default function AIPlanner() {
                   className="flex-1 min-h-0 flex flex-col"
                 >
                   {/* Messages Area */}
-                  <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4 bg-[radial-gradient(circle_at_0%_0%,rgba(16,185,129,0.07),transparent_35%),radial-gradient(circle_at_100%_0%,rgba(99,102,241,0.06),transparent_35%)]">
+                  <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
                     {messages.map((msg) => (
                       <motion.div
                         key={msg.id}
@@ -748,15 +535,15 @@ export default function AIPlanner() {
                         }`}
                       >
                         {msg.role === 'ai' && (
-                          <div className="shrink-0 size-8 rounded-xl bg-gradient-to-br from-emerald-100 to-indigo-100 border border-emerald-200/80 flex items-center justify-center shadow-sm">
-                            <Sparkles className="size-4 text-emerald-600" />
+                          <div className="shrink-0 size-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 flex items-center justify-center">
+                            <Sparkles className="size-4 text-emerald-500" />
                           </div>
                         )}
                         <div
                           className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                             msg.role === 'user'
-                              ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 text-white rounded-br-md shadow-[0_12px_24px_-18px_rgba(16,185,129,0.9)]'
-                              : 'bg-white/90 text-zinc-700 rounded-bl-md border border-zinc-200/80'
+                              ? 'bg-gradient-to-r from-emerald-500 to-indigo-500 text-white rounded-br-md'
+                              : 'bg-muted/60 text-foreground rounded-bl-md'
                           }`}
                         >
                           {msg.text}
@@ -766,7 +553,7 @@ export default function AIPlanner() {
                   </div>
 
                   {/* Chat Input */}
-                  <div className="shrink-0 p-4 border-t border-zinc-200/80 bg-white/90 backdrop-blur">
+                  <div className="shrink-0 p-4 border-t border-border">
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -774,13 +561,13 @@ export default function AIPlanner() {
                         onChange={(e) => setChatInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                         placeholder="Savolingizni yozing..."
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-zinc-200/80 text-sm placeholder:text-zinc-500/80 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400/70 transition-all"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-muted/40 border border-border text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30 transition-all"
                       />
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSendMessage}
-                        className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 text-white hover:from-emerald-600 hover:via-teal-600 hover:to-indigo-600 transition-all cursor-pointer shadow-[0_14px_28px_-18px_rgba(16,185,129,0.8)]"
+                        className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-500 text-white hover:from-emerald-600 hover:to-indigo-600 transition-all cursor-pointer"
                       >
                         <Send className="size-4" />
                       </motion.button>
@@ -798,34 +585,34 @@ export default function AIPlanner() {
                   {showPlan ? (
                     <>
                       {/* Plan Content */}
-                      <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 bg-[radial-gradient(circle_at_0%_0%,rgba(16,185,129,0.05),transparent_35%),radial-gradient(circle_at_100%_0%,rgba(99,102,241,0.05),transparent_35%)]">
+                      <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
                         {/* Plan Header */}
-                        <div className="rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-indigo-50 border border-emerald-200/60 p-5 shadow-[0_16px_35px_-28px_rgba(16,185,129,0.7)]">
+                        <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-indigo-500/10 border border-emerald-500/15 p-5">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h2 className="text-lg font-bold text-zinc-900 mb-1">
-                                {currentPlan?.title || MOCK_PLAN.title}
+                              <h2 className="text-lg font-bold text-foreground mb-1">
+                                {MOCK_PLAN.title}
                               </h2>
-                              <div className="flex items-center gap-3 text-xs text-zinc-600">
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
-                                  <Lightbulb className="size-3.5 text-emerald-600" />
-                                  {currentPlan ? API_MODEL_LABEL[currentPlan.planning_model] : MOCK_PLAN.model}
+                                  <Lightbulb className="size-3.5 text-emerald-500" />
+                                  {MOCK_PLAN.model}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Clock className="size-3.5 text-indigo-600" />
-                                  {currentPlan ? `${currentPlan.duration} daqiqa` : MOCK_PLAN.duration}
+                                  <Clock className="size-3.5 text-indigo-500" />
+                                  {MOCK_PLAN.duration}
                                 </span>
                                 {selectedClass && (
                                   <span className="flex items-center gap-1">
-                                    <Users className="size-3.5 text-amber-600" />
+                                    <Users className="size-3.5 text-amber-500" />
                                     {selectedClass} sinf
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 border border-emerald-200">
-                              <Sparkles className="size-3.5 text-emerald-600" />
-                              <span className="text-xs font-semibold text-emerald-700">
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                              <Sparkles className="size-3.5 text-emerald-500" />
+                              <span className="text-xs font-semibold text-emerald-500">
                                 AI yaratgan
                               </span>
                             </div>
@@ -833,23 +620,23 @@ export default function AIPlanner() {
                         </div>
 
                         {/* Plan Sections */}
-                        {planSections.map((section, idx) => (
+                        {MOCK_PLAN.sections.map((section, idx) => (
                           <motion.div
                             key={section.name}
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="rounded-2xl bg-white/90 border border-zinc-200/80 p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                            className="rounded-xl bg-card border border-border p-4 hover:shadow-md transition-shadow"
                           >
                             <div className="flex items-center justify-between mb-2.5">
-                              <h3 className="text-sm font-bold text-zinc-900">
+                              <h3 className="text-sm font-bold text-foreground">
                                 {section.name}
                               </h3>
-                              <span className="text-xs font-medium text-zinc-600 px-2.5 py-1 rounded-lg bg-zinc-100/80">
+                              <span className="text-xs font-medium text-muted-foreground px-2.5 py-1 rounded-lg bg-muted">
                                 {section.time}
                               </span>
                             </div>
-                            <p className="text-sm text-zinc-600 leading-relaxed">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
                               {section.content}
                             </p>
                           </motion.div>
@@ -857,11 +644,11 @@ export default function AIPlanner() {
                       </div>
 
                       {/* Export Button */}
-                      <div className="shrink-0 p-4 border-t border-zinc-200/80 bg-white/90">
+                      <div className="shrink-0 p-4 border-t border-border">
                         <motion.button
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-zinc-900 to-zinc-700 text-white hover:from-zinc-800 hover:to-zinc-600 transition-all cursor-pointer shadow-[0_18px_36px_-24px_rgba(15,23,42,0.9)]"
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm bg-foreground text-background hover:bg-foreground/90 transition-all cursor-pointer"
                         >
                           <Download className="size-4" />
                           PDF formatda yuklab olish
@@ -871,13 +658,13 @@ export default function AIPlanner() {
                   ) : (
                     /* Empty state */
                     <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-                      <div className="size-20 rounded-2xl bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center mb-5">
-                        <FileText className="size-10 text-zinc-400" />
+                      <div className="size-20 rounded-2xl bg-muted/40 flex items-center justify-center mb-5">
+                        <FileText className="size-10 text-muted-foreground/30" />
                       </div>
-                      <h3 className="text-lg font-bold text-zinc-800 mb-2">
+                      <h3 className="text-lg font-bold text-foreground mb-2">
                         Dars reja hali yaratilmadi
                       </h3>
-                      <p className="text-sm text-zinc-600 max-w-sm">
+                      <p className="text-sm text-muted-foreground max-w-sm">
                         Chap paneldan parametrlarni to'ldiring va "Dars reja yaratish" tugmasini
                         bosing. AI sizga professional dars reja tayyorlab beradi.
                       </p>

@@ -3,19 +3,14 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import type { Student } from '../types/database'
 
-export function useStudents(classId?: string, options?: { enabled?: boolean }) {
+export function useStudents(classId?: string) {
   const { profile } = useAuth()
-  const enabled = options?.enabled !== false
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const fetchStudents = useCallback(async () => {
-    if (!profile?.school_id || !enabled) {
-      setStudents([])
-      setLoading(false)
-      return
-    }
+    if (!profile?.school_id) { setLoading(false); return }
     setLoading(true)
     setError(null)
 
@@ -38,7 +33,7 @@ export function useStudents(classId?: string, options?: { enabled?: boolean }) {
       setStudents(data || [])
     }
     setLoading(false)
-  }, [profile?.school_id, classId, enabled])
+  }, [profile?.school_id, classId])
 
   useEffect(() => {
     fetchStudents()
