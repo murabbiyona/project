@@ -245,10 +245,9 @@ export default function AIPlanner() {
               animate={{ width: 340, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="shrink-0"
-              style={{ height: 'calc(100vh - 10rem)' }}
+              className="shrink-0 h-full min-h-0"
             >
-              <div className="w-[340px] h-full flex flex-col gap-4 overflow-y-auto rounded-[22px] border border-white/80 bg-white/85 p-4 pr-3 pb-3 backdrop-blur-xl shadow-[0_25px_65px_-40px_rgba(15,23,42,0.5)]">
+              <div className="w-[340px] h-full min-h-0 flex flex-col gap-4 overflow-y-auto rounded-[22px] border border-white/80 bg-white/85 p-4 pr-3 pb-3 backdrop-blur-xl shadow-[0_25px_65px_-40px_rgba(15,23,42,0.5)]">
           {/* Planning Model Selector */}
           <div>
             <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.14em] mb-3 block">
@@ -465,7 +464,7 @@ export default function AIPlanner() {
         </AnimatePresence>
 
         {/* ─── Collapse/Expand Toggle ─── */}
-        <div className="shrink-0 flex items-start pt-2">
+        <div className="shrink-0 flex items-center">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -486,7 +485,7 @@ export default function AIPlanner() {
         </div>
 
         {/* ─── RIGHT SIDE: Chat & Result Panel ─── */}
-        <div className="flex-1 min-w-0 flex flex-col rounded-[24px] border border-white/80 bg-white/85 backdrop-blur-xl shadow-[0_28px_70px_-45px_rgba(15,23,42,0.6)] overflow-hidden" style={{ height: 'calc(100vh - 10rem)' }}>
+        <div className="flex-1 min-w-0 h-full min-h-0 flex flex-col rounded-[24px] border border-white/80 bg-white/85 backdrop-blur-xl shadow-[0_28px_70px_-45px_rgba(15,23,42,0.6)] overflow-hidden">
           {/* Tab Switcher */}
           <div className="flex shrink-0 gap-2 p-2.5 border-b border-zinc-200/70 bg-gradient-to-r from-white via-emerald-50/50 to-indigo-50/45">
             {[
