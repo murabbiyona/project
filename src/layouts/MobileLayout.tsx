@@ -64,9 +64,14 @@ export default function MobileLayout() {
     exit: { opacity: 0, y: -10 }
   };
 
-  const floatingLoop = {
-    y: [0, -10, 0],
-    transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+  const floatingLoopValue = {
+    y: [0, -10, 0]
+  };
+
+  const floatingLoopTransition = {
+    duration: 4,
+    repeat: Infinity,
+    ease: "easeInOut" as any
   };
 
   return (
@@ -78,7 +83,8 @@ export default function MobileLayout() {
       <div className="w-full max-w-md relative flex h-[100dvh] flex-col overflow-hidden bg-transparent">
         <motion.div
            aria-hidden
-           animate={floatingLoop}
+           animate={floatingLoopValue}
+           transition={floatingLoopTransition}
            className={`pointer-events-none absolute right-[-60px] top-14 h-44 w-44 rounded-full blur-3xl transition-colors duration-1000 ${
              theme === 'dark' ? 'bg-emerald-900/10' : 'bg-emerald-300/20'
            }`}

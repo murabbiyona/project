@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, RotateCcw } from 'lucide-react';
 
 const classOptions = ['5-A', '5-B', '6-A', '6-B', '7-A'];
