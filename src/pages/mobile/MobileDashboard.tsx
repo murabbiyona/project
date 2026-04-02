@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { QrCode, Zap, BarChart2, Brain, Users, CheckCircle, Bell, TrendingUp, Calendar, ScanLine } from 'lucide-react';
+import { QrCode, Zap, BarChart2, Brain, Users, CheckCircle, Bell, TrendingUp, Calendar } from 'lucide-react';
 
 const todayLessons = [
   { time: '08:00', class: '5-A', subject: 'Matematika', status: 'done' },
@@ -10,7 +10,6 @@ const todayLessons = [
 
 const quickActions = [
   { label: 'QR Davomat', desc: 'Kamera bilan', icon: QrCode, bg: 'bg-emerald-500', shadow: 'shadow-emerald-200', link: '/mobile/scanner' },
-  { label: 'Interaktiv test', desc: 'Plickers / MCQ', icon: ScanLine, bg: 'bg-violet-500', shadow: 'shadow-violet-200', link: '/mobile/interactive' },
   { label: 'Pult rejimi', desc: 'Tezkor baho', icon: Zap, bg: 'bg-purple-500', shadow: 'shadow-purple-200', link: '/mobile/remote' },
   { label: "Baho qo'yish", desc: "Ro'yxat bo'yicha", icon: BarChart2, bg: 'bg-blue-500', shadow: 'shadow-blue-200', link: '/mobile/grades' },
   { label: 'AI Yordam', desc: 'Maslahat', icon: Brain, bg: 'bg-orange-500', shadow: 'shadow-orange-200', link: '#' },

@@ -36,7 +36,6 @@ import MobileScanner from './pages/mobile/MobileScanner';
 import MobileGrades from './pages/mobile/MobileGrades';
 import MobileProfile from './pages/mobile/MobileProfile';
 import MobileRemote from './pages/mobile/MobileRemote';
-import MobileInteractiveAssessment from './pages/mobile/MobileInteractiveAssessment';
 import ParentMobileLayout from './layouts/ParentMobileLayout';
 import ParentAppHome from './pages/parent-app/ParentAppHome';
 import ParentAppGrades from './pages/parent-app/ParentAppGrades';
@@ -95,7 +94,6 @@ function App() {
         <Route index element={<MobileDashboard />} />
         <Route path="scanner" element={<MobileScanner />} />
         <Route path="remote" element={<MobileRemote />} />
-        <Route path="interactive" element={<MobileInteractiveAssessment />} />
         <Route path="grades" element={<MobileGrades />} />
         <Route path="profile" element={<MobileProfile />} />
       </Route>
