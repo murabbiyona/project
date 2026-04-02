@@ -35,6 +35,7 @@ import MobileScanner from './pages/mobile/MobileScanner';
 import MobileGrades from './pages/mobile/MobileGrades';
 import MobileProfile from './pages/mobile/MobileProfile';
 import MobileRemote from './pages/mobile/MobileRemote';
+import MobileAssistant from './pages/mobile/MobileAssistant';
 import ParentMobileLayout from './layouts/ParentMobileLayout';
 import ParentAppHome from './pages/parent-app/ParentAppHome';
 import ParentAppGrades from './pages/parent-app/ParentAppGrades';
@@ -94,6 +95,7 @@ function App() {
         <Route path="remote" element={<MobileRemote />} />
         <Route path="grades" element={<MobileGrades />} />
         <Route path="profile" element={<MobileProfile />} />
+        <Route path="assistant" element={<MobileAssistant />} />
       </Route>
 
       {/* Ota-ona Mobile App (PWA) */}
