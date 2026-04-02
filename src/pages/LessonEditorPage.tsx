@@ -673,15 +673,60 @@ function StandardsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── AI Planning Models ─────────────────────────────────────────────────────
+const PLANNING_MODELS = [
+  { id: '5e', title: '5E Model', subtitle: 'Engage, Explore, Explain, Elaborate, Evaluate', color: 'emerald' },
+  { id: 'smart', title: 'SMART', subtitle: 'Specific, Measurable, Achievable, Relevant, Time-bound', color: 'blue' },
+  { id: '2080', title: '20/80', subtitle: "20% nazariya, 80% amaliyot", color: 'purple' },
+  { id: 'backward', title: 'Backward', subtitle: "Natijadan boshlab rejalashtirish", color: 'amber' },
+];
+
+const BLOOM_LEVELS = [
+  { label: 'Eslash', color: 'bg-red-50 text-red-600 border-red-200' },
+  { label: 'Tushunish', color: 'bg-orange-50 text-orange-600 border-orange-200' },
+  { label: "Qo'llash", color: 'bg-yellow-50 text-yellow-600 border-yellow-200' },
+  { label: 'Tahlil', color: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+  { label: 'Sintez', color: 'bg-blue-50 text-blue-600 border-blue-200' },
+  { label: 'Baholash', color: 'bg-purple-50 text-purple-600 border-purple-200' },
+];
+
+const DURATIONS = [35, 40, 45, 80];
+
+const MOCK_PLAN_SECTIONS = [
+  { name: "Jalb qilish (Engage)", time: "5 daq", content: "O'quvchilarga real hayotdan to'g'ri burchakli uchburchak misollarini ko'rsating." },
+  { name: "Tadqiq qilish (Explore)", time: "12 daq", content: "Guruhda ishlash. Har bir guruhga turli o'lchamdagi uchburchaklar beriladi." },
+  { name: "Tushuntirish (Explain)", time: "10 daq", content: "Formulani rasmiy tarzda taqdim eting. Vizual isbotni ko'rsating." },
+  { name: "Kengaytirish (Elaborate)", time: "13 daq", content: "Murakkabroq masalalarni yeching: masofa hisoblash, koordinatalar." },
+  { name: "Baholash (Evaluate)", time: "5 daq", content: "Qisqa mustaqil ish: 3 ta masala. O'z-o'zini baholash varaqasi." },
+];
+
 // ─── AI Assistant Panel ────────────────────────────────────────────────────────
 function AIAssistantPanel({ onClose }: { onClose: () => void }) {
   const [prompt, setPrompt] = useState('');
   const [copied, setCopied] = useState(false);
+  const [aiTab, setAiTab] = useState<'suggest' | 'plan'>('suggest');
+  const [selectedModel, setSelectedModel] = useState('5e');
+  const [selectedBlooms, setSelectedBlooms] = useState<string[]>([]);
+  const [duration, setDuration] = useState(45);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(AI_RESPONSE.replace(/\*\*/g, ''));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const toggleBloom = (label: string) => {
+    setSelectedBlooms(prev => prev.includes(label) ? prev.filter(b => b !== label) : [...prev, label]);
+  };
+
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+      setShowPlan(true);
+    }, 2000);
   };
 
   return (
@@ -698,75 +743,181 @@ function AIAssistantPanel({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      {/* Response */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="text-[13px] text-slate-700 leading-relaxed space-y-3 ai-content">
-          <p>Ushbu dars mazmuniga asoslanib, quyidagi tavsiyalarni berish mumkin:</p>
-
-          <div>
-            <p className="font-extrabold text-slate-900 mb-1.5">1. Fayl tuzilmasini vizualizatsiya qilish:</p>
-            <p>O'quvchilarga shunchaki papka ochishni emas, balki <strong className="font-bold">"Virtual Kutubxona"</strong> loyihasini yarattiring.</p>
-            <ul className="mt-1.5 space-y-1 pl-4">
-              <li className="text-[12px]">• <em>Namuna:</em> "Maktab" papkasi → Ichida "9-sinf" → Uning ichida "Informatika", "Tarix", "Ona tili" papkalari. Bu iyerarxiya tushunchasini hayotiy misol bilan mustahkamlaydi.</li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-extrabold text-slate-900 mb-1.5">2. Amaliy topshiriqni murakkablashtirish:</p>
-            <p>O'quvchilarga shunchaki papka ochishni emas, balki <strong className="font-bold">"Virtual Kutubxona"</strong> loyihasini yarattiring.</p>
-          </div>
-
-          <div>
-            <p className="font-extrabold text-slate-900 mb-1.5">3. Tabaqalashtirilgan ta'lim (Diferensiatsiya):</p>
-            <ul className="space-y-1.5 pl-2">
-              <li className="text-[12px]">• <strong>Iqtidorli o'quvchilar uchun:</strong> Fayllarni "Saralash" (Sort by) funksiyasidan tashqari, "Guruhlash" (Group by) funksiyasini o'rgatish.</li>
-              <li className="text-[12px]">• <strong>Yordamga muhtoj o'quvchilar uchun:</strong> Fayl nomini o'zgartirishda (nuqtadan keyingi qismini) o'chirib yubormaslik haqida eslatma berish (chunki fayl ochilmay qolishi mumkin).</li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-extrabold text-slate-900 mb-1.5">4. Baholash uchun Exit Ticket (Darsdan chiqish chiptasi):</p>
-            <p>Dars oxirida o'quvchilarga quyidagi savolni bering: <em>"Agar kompyuteringizda barcha papkalar o'chib ketib, 1000 ta fayl aralashib yotsa, ularni qaysi 3 ta belgi bo'yicha tartiblagan bo'lar edingiz? (Turi, sanasi, nomi)"</em></p>
-          </div>
-
-          <p className="text-slate-500 italic text-[12px] border-t border-slate-100 pt-3">
-            Xulosa: Rejangiz dars o'tish uchun tayyor va sifatli. Agar sizga ushbu dars uchun <strong>amaliy mashqlar ro'yxati</strong> yoki <strong>qisqa test</strong> kerak bo'lsa, yordam berishim mumkin.
-          </p>
-        </div>
-      </div>
-
-      {/* Actions row */}
-      <div className="px-4 pb-2 flex items-center gap-2 shrink-0">
-        <button className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200">
-          <BookOpen className="w-3.5 h-3.5" /> Add to lesson
+      {/* Tab switcher */}
+      <div className="flex gap-1 px-3 py-2 border-b border-slate-100 shrink-0">
+        <button
+          onClick={() => setAiTab('suggest')}
+          className={`flex-1 py-2 rounded-xl text-[12px] font-bold transition-all ${aiTab === 'suggest' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+        >
+          Tavsiyalar
         </button>
         <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+          onClick={() => setAiTab('plan')}
+          className={`flex-1 py-2 rounded-xl text-[12px] font-bold transition-all ${aiTab === 'plan' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
         >
-          <Copy className="w-3.5 h-3.5" />
-          {copied ? 'Copied!' : 'Copy'}
+          Dars rejalashtirish
         </button>
-        <span className="ml-auto text-[11px] font-bold text-slate-300">◈ 298</span>
       </div>
 
-      {/* Input */}
-      <div className="px-3 py-3 border-t border-slate-100 shrink-0">
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-[14px] px-3 py-2.5 focus-within:border-slate-400 transition-colors">
-          <input
-            value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-            placeholder="Ask about your lesson..."
-            className="flex-1 text-[13px] font-medium text-slate-700 bg-transparent outline-none placeholder:text-slate-400"
-          />
-          <button
-            disabled={!prompt.trim()}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-30 hover:bg-slate-800 transition-colors shrink-0"
-          >
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
+      {aiTab === 'suggest' ? (
+        <>
+          {/* Suggestion Response */}
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="text-[13px] text-slate-700 leading-relaxed space-y-3 ai-content">
+              <p>Ushbu dars mazmuniga asoslanib, quyidagi tavsiyalarni berish mumkin:</p>
+              <div>
+                <p className="font-extrabold text-slate-900 mb-1.5">1. Fayl tuzilmasini vizualizatsiya qilish:</p>
+                <p>O'quvchilarga shunchaki papka ochishni emas, balki <strong className="font-bold">"Virtual Kutubxona"</strong> loyihasini yarattiring.</p>
+                <ul className="mt-1.5 space-y-1 pl-4">
+                  <li className="text-[12px]">• <em>Namuna:</em> "Maktab" papkasi → Ichida "9-sinf" → Uning ichida "Informatika", "Tarix", "Ona tili" papkalari.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-extrabold text-slate-900 mb-1.5">2. Amaliy topshiriqni murakkablashtirish:</p>
+                <p>O'quvchilarga shunchaki papka ochishni emas, balki <strong className="font-bold">"Virtual Kutubxona"</strong> loyihasini yarattiring.</p>
+              </div>
+              <div>
+                <p className="font-extrabold text-slate-900 mb-1.5">3. Tabaqalashtirilgan ta'lim (Diferensiatsiya):</p>
+                <ul className="space-y-1.5 pl-2">
+                  <li className="text-[12px]">• <strong>Iqtidorli o'quvchilar uchun:</strong> Fayllarni "Saralash" funksiyasidan tashqari, "Guruhlash" funksiyasini o'rgatish.</li>
+                  <li className="text-[12px]">• <strong>Yordamga muhtoj o'quvchilar uchun:</strong> Fayl nomini o'zgartirishda eslatma berish.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-extrabold text-slate-900 mb-1.5">4. Baholash uchun Exit Ticket:</p>
+                <p>Dars oxirida o'quvchilarga quyidagi savolni bering: <em>"Agar kompyuteringizda 1000 ta fayl aralashib yotsa, ularni qaysi 3 ta belgi bo'yicha tartiblagan bo'lar edingiz?"</em></p>
+              </div>
+              <p className="text-slate-500 italic text-[12px] border-t border-slate-100 pt-3">
+                Xulosa: Rejangiz dars o'tish uchun tayyor va sifatli.
+              </p>
+            </div>
+          </div>
+
+          {/* Actions row */}
+          <div className="px-4 pb-2 flex items-center gap-2 shrink-0">
+            <button className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200">
+              <BookOpen className="w-3.5 h-3.5" /> Darsga qo'shish
+            </button>
+            <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200">
+              <Copy className="w-3.5 h-3.5" /> {copied ? 'Nusxalandi!' : 'Nusxalash'}
+            </button>
+          </div>
+
+          {/* Input */}
+          <div className="px-3 py-3 border-t border-slate-100 shrink-0">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-[14px] px-3 py-2.5 focus-within:border-slate-400 transition-colors">
+              <input
+                value={prompt}
+                onChange={e => setPrompt(e.target.value)}
+                placeholder="Dars haqida savol bering..."
+                className="flex-1 text-[13px] font-medium text-slate-700 bg-transparent outline-none placeholder:text-slate-400"
+              />
+              <button disabled={!prompt.trim()} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-30 hover:bg-slate-800 transition-colors shrink-0">
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* AI Lesson Planner */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
+            {/* Planning Model */}
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Rejalashtirish modeli</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {PLANNING_MODELS.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelectedModel(m.id)}
+                    className={`p-2.5 rounded-xl text-left transition-all border ${
+                      selectedModel === m.id
+                        ? `bg-${m.color}-50 border-${m.color}-300 ring-1 ring-${m.color}-200`
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className={`text-[12px] font-extrabold ${selectedModel === m.id ? 'text-slate-900' : 'text-slate-700'}`}>{m.title}</span>
+                    <p className="text-[10px] text-slate-500 leading-tight mt-0.5 line-clamp-1">{m.subtitle}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Bloom's Taxonomy */}
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Blum taksonomiyasi</span>
+              <div className="flex flex-wrap gap-1.5">
+                {BLOOM_LEVELS.map(level => (
+                  <button
+                    key={level.label}
+                    onClick={() => toggleBloom(level.label)}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+                      selectedBlooms.includes(level.label) ? level.color : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {level.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Duration */}
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Davomiyligi</span>
+              <div className="flex gap-1.5">
+                {DURATIONS.map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setDuration(d)}
+                    className={`flex-1 py-2 rounded-xl text-[12px] font-bold transition-all border ${
+                      duration === d
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    {d} daq
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Generate Button */}
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="w-full py-3 rounded-2xl font-bold text-[13px] text-white bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 hover:from-emerald-600 hover:via-teal-600 hover:to-indigo-600 transition-all shadow-[0_8px_20px_-8px_rgba(16,185,129,0.7)] disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {isGenerating ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Yaratilmoqda...</>
+              ) : (
+                <><Sparkles className="w-4 h-4" /> Dars reja yaratish</>
+              )}
+            </button>
+
+            {/* Generated Plan */}
+            {showPlan && (
+              <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Yaratilgan reja</span>
+                  <button className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">
+                    <BookOpen className="w-3 h-3" /> Darsga qo'shish
+                  </button>
+                </div>
+                {MOCK_PLAN_SECTIONS.map((section, idx) => (
+                  <div key={idx} className="p-3 bg-white border border-slate-100 rounded-[14px] shadow-sm">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[12px] font-extrabold text-slate-900">{section.name}</span>
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{section.time}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">{section.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

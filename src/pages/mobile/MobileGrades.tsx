@@ -59,7 +59,7 @@ export default function MobileGrades() {
   const [selectedClass, setSelectedClass] = useState('5-A');
   const [selectedSubject, setSelectedSubject] = useState('Matematika');
   const [grades, setGrades] = useState<Record<string, number | null>>({});
-  
+
   // Voice Hook
   const {
     isListening,
@@ -69,7 +69,7 @@ export default function MobileGrades() {
 
   const [listenTime, setListenTime] = useState(0);
   const timerRef = useRef<any>(null);
-  
+
   // Eng oxirgi qo'shilgan/o'zgargan ovozli baholar
   const [recentlyVoiced, setRecentlyVoiced] = useState<Record<string, boolean>>({});
 
@@ -90,12 +90,12 @@ export default function MobileGrades() {
       setGrades(prev => {
         const next = { ...prev };
         let hasChanges = false;
-        
+
         for (const [student, score] of Object.entries(detectedGrades)) {
           if (next[student] !== score) {
             next[student] = score;
             hasChanges = true;
-            
+
             // Animatsiya uchun qayd etamiz
             setRecentlyVoiced(curr => ({ ...curr, [student]: true }));
             // 2 soniyadan so'ng animatsiyani o'chiramiz
@@ -108,7 +108,7 @@ export default function MobileGrades() {
             }, 2000);
           }
         }
-        
+
         return hasChanges ? next : prev;
       });
     }
@@ -189,7 +189,7 @@ export default function MobileGrades() {
         {mockStudents.map((student, i) => {
           const currentGrade = grades[student];
           const isJustVoiced = recentlyVoiced[student];
-          
+
           return (
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -205,7 +205,7 @@ export default function MobileGrades() {
               {isJustVoiced && (
                 <div className="absolute top-0 right-0 left-0 h-0.5 bg-indigo-500 animate-pulse" />
               )}
-              
+
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-colors ${
@@ -227,12 +227,12 @@ export default function MobileGrades() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 {gradeValues.map((grade) => {
                   const colors = gradeColor(grade);
                   const isSelected = grades[student] === grade;
-                  
+
                   return (
                     <button
                       key={grade}
@@ -256,7 +256,7 @@ export default function MobileGrades() {
       {/* Ekran ostidagi suzuvchi panel */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-[75px] pt-12 px-4 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none z-40">
         <div className="w-full pointer-events-auto">
-          
+
           {/* KUZATISH PANELI (OVOZ YOZILAYOTGANDA) */}
           {isListening ? (
              <div className="bg-card border-[3px] border-indigo-500 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5">
@@ -282,7 +282,7 @@ export default function MobileGrades() {
                  <p className={`text-[14px] font-medium leading-relaxed italic ${transcript ? 'text-indigo-800 dark:text-indigo-200' : 'text-muted-foreground'}`}>
                    "{transcript || 'O\'quvchi ismini va bahoni ayting (Masalan: Jasurga besh)...'}"
                  </p>
-                 
+
                  {Object.keys(detectedGrades).length > 0 && (
                    <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
