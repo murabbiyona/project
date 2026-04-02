@@ -27,6 +27,17 @@
   --radius: 0.6rem;
 }
 
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --border: #27272a;
+  --ring: #d4d4d8;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -39,14 +50,14 @@
 
   /* Custom Scrollbar from Source */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 4px;
+    height: 4px;
   }
   ::-webkit-scrollbar-button {
     display: none;
   }
   ::-webkit-scrollbar-thumb {
-    background: #18181b;
+    background: #cbd5e1;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-track {
@@ -76,6 +87,26 @@
 }
 
 @layer utilities {
+  .bg-mobile-surface {
+    background:
+      radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.12), transparent 22%),
+      linear-gradient(180deg, #f7f7fb 0%, #f3f4f6 100%);
+  }
+
+  .mobile-shell-shadow {
+    box-shadow:
+      0 24px 70px rgba(24, 24, 27, 0.14),
+      0 2px 10px rgba(24, 24, 27, 0.06);
+  }
+
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+  }
+
   .bg-pattern-active {
     background-color: var(--background);
     background-image: radial-gradient(#e4e4e7 0.8px, transparent 0.8px);
