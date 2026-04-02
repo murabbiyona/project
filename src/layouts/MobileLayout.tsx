@@ -91,7 +91,7 @@ export default function MobileLayout() {
           initial={{ y: 0 }}
           animate={{ y: showNav ? 0 : "100%" }}
           transition={{ type: "spring", stiffness: 350, damping: 30 }}
-          className="absolute bottom-0 left-0 right-0 z-50 w-full border-t border-zinc-200/50 bg-white/85 px-1.5 pt-1.5 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.04)]"
+          className="absolute bottom-0 left-0 right-0 z-50 w-full bg-white/90 px-1.5 pt-1.5 backdrop-blur-2xl shadow-[0_-16px_40px_rgba(0,0,0,0.05)] rounded-t-[32px] border-t border-white/60"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
         >
           <div className="flex items-center justify-around w-full relative">
@@ -117,13 +117,13 @@ export default function MobileLayout() {
                           y: isActive ? -1 : 0
                         }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        className={`relative rounded-lg p-1.5 transition-colors duration-300 ${
+                        className={`relative rounded-2xl p-1.5 transition-colors duration-300 ${
                           isActive 
-                            ? 'bg-emerald-50 text-emerald-600 shadow-sm ring-1 ring-emerald-100' 
+                            ? 'bg-emerald-50/80 text-emerald-600' 
                             : 'bg-transparent text-zinc-400'
                         }`}
                       >
-                        <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.5 : 2} />
+                        <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
                         
                         {/* Faol bo'lgandagi animatsiyali nuqta */}
                         {isActive && (
@@ -134,7 +134,7 @@ export default function MobileLayout() {
                           />
                         )}
                       </motion.div>
-                      <span className={`text-[9px] uppercase tracking-wide transition-all duration-300 ${isActive ? 'font-bold opacity-100' : 'font-semibold opacity-70'}`}>
+                      <span className={`text-[9px] uppercase tracking-wide transition-all duration-300 ${isActive ? 'font-bold opacity-100' : 'font-medium opacity-60'}`}>
                         {tab.label}
                       </span>
                     </>
