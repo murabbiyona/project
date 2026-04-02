@@ -1,0 +1,64 @@
+<div data-slot="sidebar-wrapper" style="--sidebar-width:16rem;--sidebar-width-icon:4.5rem" class="group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex w-full">
+  <div class="flex flex-col h-screen min-h-[600px] w-full" style="--top-header-height: 3.8rem; --content-padding-top: 0.5rem;">
+    <!-- HEADER -->
+    <div style="display: contents;">
+      <header class="group/header-left flex items-center py-3.5 border-b border-border bg-card shrink-0 z-20 no-elevation">
+        <div class="hidden md:flex items-center shrink-0 w-[var(--sidebar-width)] group-data-[collapsible=icon]/sidebar-wrapper:w-[var(--sidebar-width-icon)] transition-[width] duration-200 ease-linear pl-[18px]">
+          <a class="flex items-center gap-2" href="/dashboard">
+            <div class="h-7 w-7 rounded-lg bg-[#2e3138] flex items-center justify-center shrink-0">
+               <!-- logo svg -->
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-graduation-cap h-4 w-4 text-white"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></svg>
+            </div>
+            <span class="logo-text text-[18px] text-foreground group-data-[collapsible=icon]/sidebar-wrapper:hidden"><span style="letter-spacing: -0.05em;">EM</span>Studio</span>
+          </a>
+        </div>
+      </header>
+    </div>
+    
+    <!-- SIDEBAR AND MAIN CONTENT WRAPPER -->
+    <div class="flex flex-1 min-h-0">
+      
+      <!-- DEFAULT SIDEBAR -->
+      <div class="group peer text-sidebar-foreground hidden md:block" data-state="collapsed" data-collapsible="icon" data-variant="sidebar" data-side="left" data-slot="sidebar">
+        <!-- Sidebar content mapping... -->
+         <div data-slot="sidebar-container" class="fixed top-[var(--top-header-height)] bottom-0 z-10 hidden h-[calc(100svh-var(--top-header-height))] w-[var(--sidebar-width)] transition-[left,right,width] duration-200 ease-linear md:flex left-0 ...">
+            <div data-sidebar="sidebar" data-slot="sidebar-inner" class="bg-sidebar flex h-full w-full flex-col ...">
+              <!-- SEMESTER DROPDOWN -->
+              <div data-slot="sidebar-header" data-sidebar="header" class="flex flex-col gap-2 p-2 px-3 pt-5 pb-1 ...">
+                <button class="inline-flex items-center ... h-9 gap-1.5 bg-card border border-border shadow-xs hover:bg-muted rounded-md w-full justify-start px-3">
+                  <span class="text-sm font-medium truncate group-data-[collapsible=icon]/sidebar-wrapper:hidden">2025–2026-oʻquv yili</span>
+                </button>
+              </div>
+
+              <!-- SCROLLABLE MENU ITEMS -->
+              <div dir="ltr" class="relative overflow-hidden min-h-0 flex-1 group-data-[collapsible=icon]:overflow-hidden" data-slot="sidebar-content" data-sidebar="content">
+                <!-- Group 1 -->
+                <div data-slot="sidebar-group" data-sidebar="group" class="relative flex w-full min-w-0 flex-col py-1 px-3 pt-3 group-data-[collapsible=icon]:px-4">
+                  <div data-slot="sidebar-group-label" data-sidebar="group-label" class="ring-sidebar-ring flex h-6 shrink-0 items-center rounded-md px-2 ... text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider mb-0">Classes</div>
+                  <div data-slot="sidebar-group-content" data-sidebar="group-content" class="w-full text-sm">
+                    <ul data-slot="sidebar-menu" data-sidebar="menu" class="flex w-full min-w-0 flex-col gap-1">
+                      
+                      <!-- Item -->
+                      <li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+                        <a data-slot="sidebar-menu-button" data-sidebar="menu-button" data-size="default" data-active="false" class="peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-lg p-2.5 text-left font-medium outline-hidden ring-sidebar-ring transition-all duration-200 focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 inline-flex items-center gap-2 whitespace-nowrap text-sm font-medium data-[active=true]:bg-sidebar-primary data-[active=true]:font-semibold data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-sm data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-9 text-sm" href="/dashboard/classes/my-classes">
+                          <svg>...</svg>
+                          <span class="font-medium">My Classes</span>
+                        </a>
+                      </li>
+
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+         </div>
+      </div>
+      
+      <!-- MAIN PAGE CONTENT -->
+      <main class="flex-1 min-w-0 overflow-hidden flex flex-col bg-pattern-active">
+        ...
+      </main>
+
+    </div>
+  </div>
+</div>
