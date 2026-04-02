@@ -191,7 +191,7 @@ export function useVoiceMobileGrading() {
     (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
   )
 
-  const startListening = useCallback((_studentNames: string[]) => {
+  const startListening = useCallback((studentNames: string[]) => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 

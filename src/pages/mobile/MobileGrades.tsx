@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Mic, MicOff, Check, X, AlertTriangle, Loader2,
-  Volume2, ChevronRight, RefreshCw, Trash2
+  Mic, MicOff, Check, X, AlertTriangle,
+  Volume2, ChevronRight, Trash2
 } from 'lucide-react';
 import { useVoiceMobileGrading } from '../../hooks/useVoiceMobileGrading';
 
@@ -68,7 +68,7 @@ function VoiceGradingPanel({
   const {
     isListening, isSupported,
     transcript, detectedGrades, error,
-    startListening, stopListening, cancelResult, removeGrade, setError,
+    startListening, stopListening, cancelResult, removeGrade,
   } = useVoiceMobileGrading();
 
   const [confirmed, setConfirmed] = useState(false);
