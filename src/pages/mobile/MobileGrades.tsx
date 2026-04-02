@@ -255,7 +255,7 @@ export default function MobileGrades() {
       </div>
 
       {/* Ekran ostidagi suzuvchi panel */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-[90px] pt-12 px-4 bg-gradient-to-t from-zinc-100 via-zinc-100/90 to-transparent pointer-events-none z-40">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-[75px] pt-12 px-4 bg-gradient-to-t from-zinc-100 via-zinc-100/90 to-transparent pointer-events-none z-40">
         <div className="w-full pointer-events-auto">
           
           {/* KUZATISH PANELI (OVOZ YOZILAYOTGANDA) */}
