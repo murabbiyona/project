@@ -3,7 +3,7 @@ import {
   Mic, MicOff, Check, X, AlertTriangle, Loader2,
   Volume2, ChevronRight, RefreshCw, Info
 } from 'lucide-react';
-import { useVoiceMobileGrading, type VoiceMobileResult } from '../../hooks/useVoiceMobileGrading';
+import { useVoiceMobileGrading } from '../../hooks/useVoiceMobileGrading';
 
 const classOptions = ['5-A', '5-B', '6-A', '6-B', '7-A'];
 const subjectOptions = ['Matematika', 'Algebra', 'Geometriya', 'Fizika'];
@@ -68,7 +68,7 @@ function VoiceGradingPanel({
   const {
     isListening, isProcessing, isSupported,
     transcript, result, error,
-    startListening, stopListening, cancelResult, setResult, setError,
+    startListening, stopListening, cancelResult, setError,
   } = useVoiceMobileGrading();
 
   const [selectedName, setSelectedName] = useState<string | null>(null);
