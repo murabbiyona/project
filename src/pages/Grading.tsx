@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   GraduationCap, Search, Plus, ClipboardList, Tag,
   Filter, EyeOff, Maximize2, FileText, Check, Link2, ListPlus, ChevronDown, Calendar, X, Edit2, Trash2
@@ -52,11 +53,49 @@ const STUDENTS_5A = [
   { id: '7', name: 'Halima Jumanazarova', initials: 'HJ' },
 ];
 
+interface LocalAssignment {
+  id: string;
+  title: string;
+  classId: string;
+  topic: string;
+  points: number;
+  dueDate: string;
+}
+
 export default function Grading() {
+  const { t } = useTranslation();
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState<boolean>(false);
   const [showTopicModal, setShowTopicModal] = useState<boolean>(false);
   const [showTopicListModal, setShowTopicListModal] = useState<boolean>(false);
+
+  // Yangi topshiriq form holati
+  const [newAssignmentTitle, setNewAssignmentTitle] = useState('');
+  const [newAssignmentPoints, setNewAssignmentPoints] = useState(100);
+  const [newAssignmentDueDate, setNewAssignmentDueDate] = useState('2026-04-10');
+  const [localAssignments, setLocalAssignments] = useState<LocalAssignment[]>([]);
+  const [assignmentSuccess, setAssignmentSuccess] = useState(false);
+
+  function handleCreateAssignment() {
+    if (!newAssignmentTitle.trim() || !selectedClassId) return;
+    const newAssignment: LocalAssignment = {
+      id: Date.now().toString(),
+      title: newAssignmentTitle.trim(),
+      classId: selectedClassId,
+      topic: '',
+      points: newAssignmentPoints,
+      dueDate: newAssignmentDueDate,
+    };
+    setLocalAssignments(prev => [...prev, newAssignment]);
+    setNewAssignmentTitle('');
+    setNewAssignmentPoints(100);
+    setNewAssignmentDueDate('2026-04-10');
+    setAssignmentSuccess(true);
+    setTimeout(() => {
+      setAssignmentSuccess(false);
+      setShowCreateAssignmentModal(false);
+    }, 1200);
+  }
 
   return (
     <div className="flex h-full bg-[#F8FAFC] overflow-hidden" style={{ fontFamily: "'Urbanist', sans-serif" }}>
@@ -68,14 +107,14 @@ export default function Grading() {
               <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-700">
                 <GraduationCap className="w-5 h-5" />
               </div>
-              <h1 className="text-[20px] font-black text-slate-800 tracking-tight">All Classes</h1>
+              <h1 className="text-[20px] font-black text-slate-800 tracking-tight">{t('grading.allClasses')}</h1>
             </div>
             <div className="flex items-center gap-3">
               <button className="w-10 h-10 rounded-xl border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-slate-50 transition-colors">
                 <Search className="w-4 h-4" />
               </button>
               <button className="h-10 px-4 bg-slate-900 text-white text-[13px] font-bold rounded-xl flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg">
-                <Plus className="w-4 h-4" strokeWidth={3} /> New Class
+                <Plus className="w-4 h-4" strokeWidth={3} /> {t('grading.newClass')}
               </button>
             </div>
           </div>
@@ -140,16 +179,16 @@ export default function Grading() {
                     <div className="p-6 pt-5 flex items-center justify-between">
                       <div className="text-center flex-1">
                         <p className="text-[18px] font-black text-slate-800">{cls.id === '9-A' ? '17' : cls.id === '9-B' ? '14' : '13'}</p>
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Students</p>
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t('grading.students')}</p>
                       </div>
                       <div className={`w-px h-10 ${cls.id === '9-A' ? 'bg-amber-200' : cls.id === '9-B' ? 'bg-emerald-200' : 'bg-slate-200'}`} />
                       <div className="text-center flex-1">
                         <p className="text-[18px] font-black text-slate-800">{(cls.id === '9-A' || cls.id === '9-B') ? '1' : '0'}</p>
-                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Assignments</p>
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t('grading.assignments')}</p>
                       </div>
                       <div className="w-full mt-4 absolute left-0 bottom-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-6">
-                          <span>Class Average</span>
+                          <span>{t('grading.classAverage')}</span>
                           <span>0%</span>
                         </div>
                         <div className="h-1 bg-slate-100 rounded-b-[24px] overflow-hidden">
@@ -172,9 +211,9 @@ export default function Grading() {
             <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm mb-6">
               <ClipboardList className="w-8 h-8 opacity-50" />
             </div>
-            <h2 className="text-[18px] font-black text-slate-800 mb-2">No Class Selected</h2>
+            <h2 className="text-[18px] font-black text-slate-800 mb-2">{t('grading.noClassSelected')}</h2>
             <p className="text-[14px] font-medium text-slate-500 max-w-[250px] text-center">
-              Choose a class from the sidebar to view and manage grades
+              {t('grading.noClassSelectedDesc')}
             </p>
           </div>
         ) : (
@@ -186,7 +225,7 @@ export default function Grading() {
                     <FileText className="w-5 h-5" />
                   </div>
                   <h1 className="text-[20px] font-black text-slate-800 tracking-tight">
-                    Assignments <span className="text-slate-400 text-[16px] font-medium ml-1">({(selectedClassId === '9-A' || selectedClassId === '9-B') ? '1' : '0'})</span>
+                    {t('grading.assignments')} <span className="text-slate-400 text-[16px] font-medium ml-1">({((selectedClassId === '9-A' || selectedClassId === '9-B') ? 1 : 0) + localAssignments.filter(a => a.classId === selectedClassId).length})</span>
                   </h1>
                 </div>
 
@@ -216,7 +255,7 @@ export default function Grading() {
                     onClick={() => setShowCreateAssignmentModal(true)}
                     className="h-10 px-5 flex items-center gap-2 rounded-[14px] bg-slate-900 text-white text-[13px] font-bold hover:bg-slate-800 transition-colors shadow-lg"
                   >
-                    <Plus className="w-4 h-4" strokeWidth={3} /> New Assignment
+                    <Plus className="w-4 h-4" strokeWidth={3} /> {t('grading.newAssignment')}
                   </button>
                 </div>
               </div>
@@ -227,12 +266,12 @@ export default function Grading() {
                     <tr>
                       <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest min-w-[200px] border-r border-slate-100">
                         <div className="flex items-center gap-1 cursor-pointer hover:text-slate-600 transition-colors">
-                          STUDENT NAME <span className="text-[8px]">▼</span>
+                          {t('grading.studentName')} <span className="text-[8px]">▼</span>
                         </div>
                       </th>
                       <th className="w-24 px-4 py-4 text-center border-r border-slate-100 bg-slate-50/50">
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest writing-vertical-rl rotate-180 mb-2">Total</span>
+                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest writing-vertical-rl rotate-180 mb-2">{t('grading.total')}</span>
                           <span className="text-[10px]">▼</span>
                         </div>
                       </th>
@@ -243,10 +282,17 @@ export default function Grading() {
                           </div>
                         </th>
                       )}
+                      {localAssignments.filter(a => a.classId === selectedClassId).map((assignment) => (
+                        <th key={assignment.id} className="w-24 px-4 py-4 text-center border-r border-slate-100 bg-emerald-50/50 border-t-[3px] border-t-emerald-500">
+                          <div className="flex flex-col items-center text-slate-600">
+                            <span className="text-[11px] font-black uppercase tracking-widest writing-vertical-rl rotate-180 mb-2 truncate max-h-[140px]">{assignment.title}</span>
+                          </div>
+                        </th>
+                      ))}
                       <th className="w-32 px-4 py-4 text-center">
                         <button className="flex flex-col items-center mx-auto text-slate-400 hover:text-slate-600 transition-colors opacity-60 hover:opacity-100">
                           <Plus className="w-5 h-5 mb-1" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">ADD</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">{t('grading.add')}</span>
                         </button>
                       </th>
                     </tr>
@@ -297,7 +343,11 @@ export default function Grading() {
                             <span className="text-[14px] font-bold text-slate-400">—</span>
                           </td>
                         )}
-                        
+                        {localAssignments.filter(a => a.classId === selectedClassId).map((assignment) => (
+                          <td key={assignment.id} className="px-4 py-4 text-center border-r border-slate-100">
+                            <span className="text-[14px] font-bold text-slate-400">—</span>
+                          </td>
+                        ))}
                         <td className="px-4 py-4 text-center">
                           <span className="text-[14px] font-bold text-slate-400">—</span>
                         </td>
@@ -318,9 +368,9 @@ export default function Grading() {
             <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-6">
               <Tag className="w-8 h-8 opacity-50" />
             </div>
-            <h2 className="text-[18px] font-black text-slate-800 mb-2">Grade Topics</h2>
+            <h2 className="text-[18px] font-black text-slate-800 mb-2">{t('grading.gradeTopics')}</h2>
             <p className="text-[14px] font-medium text-slate-500 text-center max-w-[200px]">
-              Select a class to view and manage grade topics
+              {t('grading.selectClassForTopics')}
             </p>
           </div>
         ) : (
@@ -330,7 +380,7 @@ export default function Grading() {
                 <div className="w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl text-slate-600 shadow-sm shrink-0">
                   <Tag className="w-5 h-5" />
                 </div>
-                <h2 className="text-[20px] font-black text-slate-800 leading-tight tracking-tight">Grade<br/>Topics</h2>
+                <h2 className="text-[20px] font-black text-slate-800 leading-tight tracking-tight">{t('grading.gradeTopics')}</h2>
               </div>
               <div className="flex items-center gap-1.5 text-slate-400">
                 <button 
@@ -354,7 +404,7 @@ export default function Grading() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-[32px] font-black text-slate-800 leading-none mb-1">100%</h1>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Topic Weights</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t('grading.topicWeights')}</p>
               </div>
               
               {/* CSS Donut Chart */}
@@ -381,75 +431,106 @@ export default function Grading() {
         )}
       </div>
 
-      {/* ─── Create Assignment Modal ─── */}
+      {/* ─── Yangi topshiriq yaratish modali ─── */}
       {showCreateAssignmentModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-[460px] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300">
             <div className="p-6 border-b border-slate-100 flex items-start justify-between">
               <div>
-                <h2 className="text-[18px] font-black text-slate-800">Create Assignment</h2>
-                <p className="text-[13px] font-medium text-slate-500 mt-1">Create a new assignment for grading.</p>
+                <h2 className="text-[18px] font-black text-slate-800">{t('grading.newAssignment')}</h2>
+                <p className="text-[13px] font-medium text-slate-500 mt-1">{t('createAssignment.desc')}</p>
               </div>
-              <button onClick={() => setShowCreateAssignmentModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors p-1">
+              <button onClick={() => { setShowCreateAssignmentModal(false); setAssignmentSuccess(false); }} className="text-slate-400 hover:text-slate-600 transition-colors p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <div className="p-6 space-y-5">
-              <div className="space-y-2">
-                <label className="text-[13px] font-black text-slate-800">Title * *</label>
-                <div className="bg-white border border-slate-300 rounded-xl px-4 py-2.5 focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-all shadow-sm">
-                  <input className="bg-transparent outline-none text-[14px] font-bold text-slate-800 w-full" placeholder="e.g. Chapter 5 Quiz" autoFocus />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-[13px] font-black text-slate-800">Select a class</label>
-                <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm cursor-pointer hover:border-slate-300 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                    <span className="text-[14px] font-bold text-slate-800">9-A</span>
+            {assignmentSuccess ? (
+              <div className="p-10 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                  <Check className="w-8 h-8 text-emerald-600" strokeWidth={3} />
+                </div>
+                <p className="text-[16px] font-black text-slate-800">{t('grading.assignmentCreated')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="p-6 space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-[13px] font-black text-slate-800">{t('grading.title')} *</label>
+                    <div className="bg-white border border-slate-300 rounded-xl px-4 py-2.5 focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-all shadow-sm">
+                      <input
+                        className="bg-transparent outline-none text-[14px] font-bold text-slate-800 w-full"
+                        placeholder={t('grading.titlePlaceholder')}
+                        autoFocus
+                        value={newAssignmentTitle}
+                        onChange={e => setNewAssignmentTitle(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[13px] font-black text-slate-800">Topic</label>
-                  <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm cursor-pointer hover:border-slate-300 transition-colors relative">
-                    <span className="text-[14px] font-medium text-slate-800">No topic</span>
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  <div className="space-y-2">
+                    <label className="text-[13px] font-black text-slate-800">{t('grading.selectClass')}</label>
+                    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm cursor-pointer hover:border-slate-300 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                        <span className="text-[14px] font-bold text-slate-800">{selectedClassId || '9-A'}</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-black text-slate-800">{t('grading.topic')}</label>
+                      <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm cursor-pointer hover:border-slate-300 transition-colors relative">
+                        <span className="text-[14px] font-medium text-slate-800">{t('grading.noTopic')}</span>
+                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-black text-slate-800">{t('grading.points')}</label>
+                      <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm focus-within:border-slate-400 transition-colors">
+                        <input
+                          type="number"
+                          value={newAssignmentPoints}
+                          onChange={e => setNewAssignmentPoints(parseInt(e.target.value) || 0)}
+                          className="bg-transparent outline-none text-[14px] font-medium text-slate-800 w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[13px] font-black text-slate-800">{t('grading.dueDate')}</label>
+                    <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm focus-within:border-slate-400 transition-colors relative">
+                      <input
+                        type="date"
+                        value={newAssignmentDueDate}
+                        onChange={e => setNewAssignmentDueDate(e.target.value)}
+                        className="bg-transparent outline-none text-[14px] font-medium text-slate-800 w-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+                      />
+                      <Calendar className="absolute right-4 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[13px] font-black text-slate-800">Points</label>
-                  <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm focus-within:border-slate-400 transition-colors">
-                    <input type="number" defaultValue="100" className="bg-transparent outline-none text-[14px] font-medium text-slate-800 w-full" />
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-[13px] font-black text-slate-800">Due Date</label>
-                <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm focus-within:border-slate-400 transition-colors cursor-pointer relative">
-                  <span className="text-[14px] font-medium text-slate-800">03/29/2026</span>
-                  <Calendar className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center justify-end gap-3 p-6 pt-0 mt-4">
+                  <button
+                    onClick={() => setShowCreateAssignmentModal(false)}
+                    className="px-5 py-2.5 text-[14px] font-black text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-sm"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={handleCreateAssignment}
+                    disabled={!newAssignmentTitle.trim()}
+                    className="px-5 py-2.5 bg-slate-900 text-white text-[14px] font-black rounded-xl shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {t('grading.createAssignment')}
+                  </button>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 p-6 pt-0 mt-4">
-              <button 
-                onClick={() => setShowCreateAssignmentModal(false)}
-                className="px-5 py-2.5 text-[14px] font-black text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-sm"
-              >
-                Cancel
-              </button>
-              <button className="px-5 py-2.5 bg-slate-900 text-white text-[14px] font-black rounded-xl shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all hover:-translate-y-0.5">
-                Create Assignment
-              </button>
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -459,26 +540,26 @@ export default function Grading() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-[420px] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 relative">
             <div className="p-6 border-b border-slate-100 flex items-start justify-between">
-              <h2 className="text-[18px] font-black text-slate-800">Create</h2>
+              <h2 className="text-[18px] font-black text-slate-800">{t('grading.create')}</h2>
               <button onClick={() => setShowTopicModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-5">
               <div className="space-y-2">
-                <label className="text-[13px] font-black text-slate-800">Name</label>
+                <label className="text-[13px] font-black text-slate-800">{t('grading.topicName')}</label>
                 <div className="bg-white border-2 border-slate-400 rounded-xl px-4 py-2.5 shadow-sm focus-within:border-slate-800">
-                  <input className="bg-transparent outline-none text-[14px] font-medium text-slate-800 w-full" placeholder="e.g., Homework, Tests, Projects" autoFocus defaultValue={"Test"} />
+                  <input className="bg-transparent outline-none text-[14px] font-medium text-slate-800 w-full" placeholder={t('grading.topicNamePlaceholder')} autoFocus defaultValue={"Test"} />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-black text-slate-800">Weight (%) %</label>
+                <label className="text-[13px] font-black text-slate-800">{t('grading.weight')}</label>
                 <div className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm focus-within:border-slate-400 transition-colors">
                   <input type="number" defaultValue="100" className="bg-transparent outline-none text-[14px] font-medium text-slate-800 w-full" />
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-[13px] font-black text-slate-800">Color</label>
+                <label className="text-[13px] font-black text-slate-800">{t('grading.color')}</label>
                 <div className="flex items-center gap-4 flex-wrap">
                   {['bg-red-400', 'bg-orange-400', 'bg-amber-400', 'bg-emerald-400', 'bg-teal-400', 'bg-sky-400', 'bg-indigo-400', 'bg-purple-400', 'bg-pink-400'].map((color, idx) => (
                     <div key={idx} className={`w-6 h-6 rounded-full cursor-pointer hover:scale-110 transition-transform ${color} ${idx === 5 ? 'ring-2 ring-offset-2 ring-sky-400' : ''}`} />
@@ -489,13 +570,13 @@ export default function Grading() {
             </div>
             <div className="flex items-center justify-start gap-3 p-6 pt-0 mt-2">
               <button className="px-10 py-2.5 bg-slate-800 text-white text-[14px] font-black rounded-xl hover:bg-slate-900 transition-colors">
-                Create
+                {t('grading.create')}
               </button>
-              <button 
+              <button
                 onClick={() => setShowTopicModal(false)}
                 className="px-5 py-2.5 text-[14px] font-black text-slate-500 bg-white hover:bg-slate-50 rounded-xl transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -507,7 +588,7 @@ export default function Grading() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-[460px] rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 relative">
             <div className="p-6 pb-4 flex items-start justify-between">
-              <h2 className="text-[18px] font-black text-slate-800">Grade Topics</h2>
+              <h2 className="text-[18px] font-black text-slate-800">{t('grading.gradeTopics')}</h2>
               <button onClick={() => setShowTopicListModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>

@@ -21,28 +21,92 @@ export function useVoiceGrading(classId: string, subjectId: string) {
   const [error, setError] = useState<string | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+  const speechRecognitionRef = useRef<any>(null)
+  const speechTranscriptRef = useRef<string>('')
+  const useWebSpeechRef = useRef(false)
 
   const startRecording = useCallback(async () => {
     try {
       setError(null)
       setResult(null)
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-      mediaRecorderRef.current = mediaRecorder
-      chunksRef.current = []
+      speechTranscriptRef.current = ''
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
+      const hasApiKey = !!import.meta.env.VITE_OPENAI_API_KEY
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+
+      if (!hasApiKey && SpeechRecognition) {
+        // Web Speech API rejimida ishlash
+        useWebSpeechRef.current = true
+        const recognition = new SpeechRecognition()
+        recognition.lang = 'uz-UZ'
+        recognition.continuous = true
+        recognition.interimResults = false
+        recognition.maxAlternatives = 1
+
+        recognition.onresult = (event: any) => {
+          let fullTranscript = ''
+          for (let i = 0; i < event.results.length; i++) {
+            fullTranscript += event.results[i][0].transcript + ' '
+          }
+          speechTranscriptRef.current = fullTranscript.trim()
+        }
+
+        recognition.onerror = (event: any) => {
+          if (event.error !== 'aborted') {
+            setError('Ovoz tanish xatosi: ' + event.error)
+          }
+        }
+
+        speechRecognitionRef.current = recognition
+        recognition.start()
+        setIsRecording(true)
+      } else {
+        // MediaRecorder + Whisper API rejimi
+        useWebSpeechRef.current = false
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+        mediaRecorderRef.current = mediaRecorder
+        chunksRef.current = []
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) chunksRef.current.push(e.data)
+        }
+
+        mediaRecorder.start()
+        setIsRecording(true)
       }
-
-      mediaRecorder.start()
-      setIsRecording(true)
     } catch (err) {
       setError('Mikrofonga ruxsat berilmadi')
     }
   }, [])
 
   const stopRecording = useCallback(async (students: Student[]) => {
+    if (useWebSpeechRef.current) {
+      // Web Speech API to'xtatish
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop()
+        speechRecognitionRef.current = null
+      }
+      setIsRecording(false)
+      setIsProcessing(true)
+
+      // Kichik kutish — oxirgi natija kelishi uchun
+      await new Promise(r => setTimeout(r, 300))
+
+      const transcript = speechTranscriptRef.current
+      if (!transcript) {
+        setError('Ovoz eshitilmadi. Qaytadan urinib ko\'ring.')
+        setIsProcessing(false)
+        return null
+      }
+
+      const result = parseTranscript(transcript, students)
+      setIsProcessing(false)
+      setResult(result)
+      return result
+    }
+
+    // MediaRecorder + Whisper API to'xtatish
     if (!mediaRecorderRef.current) return
 
     return new Promise<VoiceGradeResult | null>((resolve) => {
@@ -64,27 +128,43 @@ export function useVoiceGrading(classId: string, subjectId: string) {
     })
   }, [])
 
+  async function processAudioWithWhisper(audioBlob: Blob): Promise<string> {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error('NO_API_KEY')
+    }
+
+    const formData = new FormData()
+    formData.append('file', audioBlob, 'voice.webm')
+    formData.append('model', 'whisper-1')
+    formData.append('language', 'uz')
+
+    const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    })
+
+    if (!whisperResponse.ok) {
+      throw new Error('Whisper API xatosi')
+    }
+
+    const { text } = await whisperResponse.json()
+    return text
+  }
+
   async function processAudio(audioBlob: Blob, students: Student[]): Promise<VoiceGradeResult> {
     try {
-      // Whisper API orqali transkripsiya
-      const formData = new FormData()
-      formData.append('file', audioBlob, 'voice.webm')
-      formData.append('model', 'whisper-1')
-      formData.append('language', 'uz')
+      let transcript: string
 
-      const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: formData,
-      })
-
-      if (!whisperResponse.ok) {
-        throw new Error('Whisper API xatosi')
+      try {
+        transcript = await processAudioWithWhisper(audioBlob)
+      } catch (whisperErr) {
+        // Whisper API ishlamasa, Web Speech API orqali urinib ko'ramiz
+        transcript = await processAudioWithWebSpeech()
       }
-
-      const { text: transcript } = await whisperResponse.json()
 
       // Transkripsiyadan ism va baho ajratib olish
       const parsed = parseTranscript(transcript, students)
@@ -102,6 +182,43 @@ export function useVoiceGrading(classId: string, subjectId: string) {
         status: 'rejected',
       }
     }
+  }
+
+  function processAudioWithWebSpeech(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (!SpeechRecognition) {
+        reject(new Error('Brauzer ovoz tanishni qo\'llab-quvvatlamaydi. Chrome yoki Edge brauzerdan foydalaning.'))
+        return
+      }
+
+      const recognition = new SpeechRecognition()
+      recognition.lang = 'uz-UZ'
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.maxAlternatives = 1
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        resolve(transcript)
+      }
+
+      recognition.onerror = (event: any) => {
+        if (event.error === 'no-speech') {
+          reject(new Error('Ovoz eshitilmadi. Qaytadan urinib ko\'ring.'))
+        } else if (event.error === 'not-allowed') {
+          reject(new Error('Mikrofonga ruxsat berilmadi.'))
+        } else {
+          reject(new Error('Ovoz tanish xatosi: ' + event.error))
+        }
+      }
+
+      recognition.onnomatch = () => {
+        reject(new Error('Ovoz tanib bo\'lmadi. Qaytadan urinib ko\'ring.'))
+      }
+
+      recognition.start()
+    })
   }
 
   function parseTranscript(transcript: string, students: Student[]): VoiceGradeResult {
