@@ -365,7 +365,7 @@ export default function AIPlanner() {
     setShowPlan(false);
     setActiveGeneratedPlan(null);
 
-    const aiPlan = await generatePlan({
+    const generationResult = await generatePlan({
       classId: selectedClass || 'manual-input',
       subjectId: subject.trim(),
       topic: `${subject.trim()} fani: ${topic.trim()}`,
@@ -376,19 +376,22 @@ export default function AIPlanner() {
 
     setIsGenerating(false);
 
-    if (!aiPlan) {
+    if (!generationResult.plan) {
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now(),
           role: 'ai',
-          text: plannerError || "Dars reja yaratishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+          text:
+            generationResult.error ||
+            plannerError ||
+            "Dars reja yaratishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
         },
       ]);
       return;
     }
 
-    setActiveGeneratedPlan(aiPlan);
+    setActiveGeneratedPlan(generationResult.plan);
     setShowPlan(true);
     setActiveTab('plan');
     setMessages((prev) => [
