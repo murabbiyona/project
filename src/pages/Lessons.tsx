@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown, Check, Edit3, List as ListIcon, Calendar, Image as ImageIcon, Bold, Italic, Underline, Strikethrough, Link as LinkIcon, ListOrdered, List, Code, Eye, Download, Import, Trash2, MoreVertical, Folder, ArrowRightLeft, Brain, Sparkles } from 'lucide-react';
+import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown, Check, Edit3, List as ListIcon, Calendar, Image as ImageIcon, Bold, Italic, Underline, Strikethrough, Link as LinkIcon, ListOrdered, List, Code, Eye, Download, Import, Trash2, MoreVertical, Folder, ArrowRightLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LessonsCalendar from '../components/lessons/LessonsCalendar';
@@ -83,23 +83,8 @@ export default function Lessons() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50 p-3 scrollbar-hide" style={{ fontFamily: "'Urbanist', sans-serif" }}>
+    <div className="flex h-full overflow-hidden bg-slate-50 gap-2 p-3 scrollbar-hide" style={{ fontFamily: "'Urbanist', sans-serif" }}>
 
-      {/* TOP HEADER with AI Button */}
-      <div className="flex items-center justify-end mb-2 shrink-0">
-        <button
-          onClick={() => navigate('/ai-planner')}
-          className="group h-10 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 text-white flex items-center gap-2.5 text-[13px] font-bold hover:from-emerald-600 hover:via-teal-600 hover:to-indigo-600 transition-all shadow-[0_8px_24px_-8px_rgba(16,185,129,0.6)] hover:shadow-[0_12px_30px_-8px_rgba(16,185,129,0.8)] cursor-pointer"
-        >
-          <div className="flex items-center gap-1.5">
-            <Brain className="w-4.5 h-4.5" />
-            <Sparkles className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
-          </div>
-          AI bilan dars rejalashtirish
-        </button>
-      </div>
-
-      <div className="flex flex-1 min-h-0 gap-2">
       {/* COLUMN 1: Classes */}
       <div className="w-[240px] shrink-0 bg-white rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-left-4 duration-500">
         <div className="px-5 py-5 flex items-center justify-between border-b border-slate-50 shrink-0">
@@ -308,7 +293,10 @@ export default function Lessons() {
                    <ArrowUp className="w-4 h-4" />
                  </button>
                  
-                 <button className="h-8 px-3 rounded-xl bg-[#1e293b] text-white flex items-center gap-1.5 text-[12px] font-bold hover:bg-slate-800 transition-colors shadow-md ml-1">
+                 <button
+                   onClick={() => navigate('/lessons/editor')}
+                   className="h-8 px-3 rounded-xl bg-[#1e293b] text-white flex items-center gap-1.5 text-[12px] font-bold hover:bg-slate-800 transition-colors shadow-md ml-1"
+                 >
                    <Plus className="w-4 h-4" /> {t('lessons.newLesson')}
                  </button>
 
@@ -353,9 +341,9 @@ export default function Lessons() {
                        />
                      </div>
                      
-                     {/* Main Content */}
-                     <div 
-                       onClick={() => setPreviewLesson(lesson)}
+                     {/* Main Content — one-click opens editor */}
+                     <div
+                       onClick={() => navigate('/lessons/editor')}
                        className="flex items-center flex-1 cursor-pointer"
                      >
                        <div className="w-[52px] h-[52px] rounded-[16px] bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100/50 group-hover:scale-105 transition-transform mr-5">
@@ -396,8 +384,8 @@ export default function Lessons() {
 
                        {lessonMenuId === lesson.id && (
                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-100 py-1.5 z-20 animate-in fade-in zoom-in-95 duration-200">
-                            <button 
-                              onClick={() => { setPreviewLesson(lesson); setLessonMenuId(null); }}
+                            <button
+                              onClick={() => { navigate('/lessons/editor'); setLessonMenuId(null); }}
                               className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left text-[14px] font-bold text-slate-700"
                             >
                               <Edit3 className="w-4 h-4 text-slate-400" /> {t('lessons.editLesson')}
@@ -451,8 +439,6 @@ export default function Lessons() {
           </button>
         </div>
       )}
-
-      </div>{/* end flex columns wrapper */}
 
       {/* Move Lesson Modal */}
       {isMoveModalOpen && (
