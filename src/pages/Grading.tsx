@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap, Search, Plus, ClipboardList, Tag,
@@ -54,12 +53,11 @@ const getGradeStyle = (score: number | null, max: number | null) => {
 };
 
 export default function Grading() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedClassId, setSelectedClassId] = useState<string | null>('7-D');
   const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState<boolean>(false);
-  const [showTopicModal, setShowTopicModal] = useState<boolean>(false);
-  const [showTopicListModal, setShowTopicListModal] = useState<boolean>(false);
+  const [, setShowTopicModal] = useState<boolean>(false);
+  const [, setShowTopicListModal] = useState<boolean>(false);
 
   // New assignment modal states
   const [newAssignmentTitle, setNewAssignmentTitle] = useState('');
@@ -261,7 +259,7 @@ export default function Grading() {
                               <span className="text-[10px] text-muted-foreground">89.0%</span>
                             </div>
                           </td>
-                          {assignments.map((assignment, i) => {
+                          {assignments.map((_, i) => {
                              // average logic (mock)
                              const averages = [90.6, 90.5, 74.4, 55.0];
                              const grades = ['A', 'A', 'C', 'F'];
