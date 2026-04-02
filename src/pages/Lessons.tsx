@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown, Check, Edit3, List as ListIcon, Calendar, Image as ImageIcon, Bold, Italic, Underline, Strikethrough, Link as LinkIcon, ListOrdered, List, Code, Eye, Download, Import, Trash2, MoreVertical, Folder, ArrowRightLeft } from 'lucide-react';
+import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown, Check, Edit3, List as ListIcon, Calendar, Image as ImageIcon, Bold, Italic, Underline, Strikethrough, Link as LinkIcon, ListOrdered, List, Code, Eye, Download, Import, Trash2, MoreVertical, Folder, ArrowRightLeft, Brain, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LessonsCalendar from '../components/lessons/LessonsCalendar';
@@ -83,8 +83,23 @@ export default function Lessons() {
   };
 
   return (
-    <div className="flex h-full overflow-hidden bg-slate-50 gap-2 p-3 scrollbar-hide" style={{ fontFamily: "'Urbanist', sans-serif" }}>
-      
+    <div className="flex flex-col h-full overflow-hidden bg-slate-50 p-3 scrollbar-hide" style={{ fontFamily: "'Urbanist', sans-serif" }}>
+
+      {/* TOP HEADER with AI Button */}
+      <div className="flex items-center justify-end mb-2 shrink-0">
+        <button
+          onClick={() => navigate('/ai-planner')}
+          className="group h-10 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 text-white flex items-center gap-2.5 text-[13px] font-bold hover:from-emerald-600 hover:via-teal-600 hover:to-indigo-600 transition-all shadow-[0_8px_24px_-8px_rgba(16,185,129,0.6)] hover:shadow-[0_12px_30px_-8px_rgba(16,185,129,0.8)] cursor-pointer"
+        >
+          <div className="flex items-center gap-1.5">
+            <Brain className="w-4.5 h-4.5" />
+            <Sparkles className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+          AI bilan dars rejalashtirish
+        </button>
+      </div>
+
+      <div className="flex flex-1 min-h-0 gap-2">
       {/* COLUMN 1: Classes */}
       <div className="w-[240px] shrink-0 bg-white rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-left-4 duration-500">
         <div className="px-5 py-5 flex items-center justify-between border-b border-slate-50 shrink-0">
@@ -436,6 +451,8 @@ export default function Lessons() {
           </button>
         </div>
       )}
+
+      </div>{/* end flex columns wrapper */}
 
       {/* Move Lesson Modal */}
       {isMoveModalOpen && (

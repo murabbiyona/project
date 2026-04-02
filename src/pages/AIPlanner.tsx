@@ -16,6 +16,12 @@ import {
   Users,
   ChevronDown,
 } from 'lucide-react';
+import {
+  useLessonPlanner,
+  type GeneratedLessonPlan,
+  type BloomLevel,
+  type PlanningModel as ApiPlanningModel,
+} from '../hooks/useLessonPlanner';
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface ChatMessage {
@@ -92,6 +98,29 @@ const BLOOM_LEVELS = [
 
 const DURATIONS = [35, 40, 45, 80];
 
+const MODEL_TO_API_MODEL: Record<string, ApiPlanningModel> = {
+  '5e': '5E',
+  smart: 'SMART',
+  '2080': '20/80',
+  backward: 'backward_design',
+};
+
+const API_MODEL_LABEL: Record<ApiPlanningModel, string> = {
+  '5E': '5E Model',
+  SMART: 'SMART Model',
+  '20/80': '20/80 Model',
+  backward_design: 'Backward Design',
+};
+
+const BLOOM_TO_API_LEVEL: Record<string, BloomLevel> = {
+  Eslash: 'remember',
+  Tushunish: 'understand',
+  "Qo'llash": 'apply',
+  Tahlil: 'analyze',
+  Baholash: 'evaluate',
+  Sintez: 'create',
+};
+
 const MOCK_PLAN = {
   title: "Pythagor teoremasi",
   model: "5E Model",
@@ -124,6 +153,133 @@ const MOCK_PLAN = {
     },
   ],
 };
+
+interface PlanSectionView {
+  name: string;
+  time: string;
+  content: string;
+}
+
+const SECTION_NAME_MAP: Record<string, string> = {
+  engage: 'Jalb qilish (Engage)',
+  explore: 'Tadqiq qilish (Explore)',
+  explain: 'Tushuntirish (Explain)',
+  elaborate: 'Kengaytirish (Elaborate)',
+  evaluate: 'Baholash (Evaluate)',
+  opening: 'Kirish bosqichi',
+  main_activities: 'Asosiy faoliyatlar',
+  assessment: 'Baholash',
+  closing: 'Yakunlash',
+  teacher_led: "O'qituvchi boshqaradigan qism",
+  student_led: "O'quvchi boshqaradigan qism",
+  transitions: "O'tish bosqichlari",
+  stage1_desired_results: '1-bosqich: Kerakli natijalar',
+  stage2_assessment_evidence: '2-bosqich: Baholash dalillari',
+  stage3_learning_plan: "3-bosqich: O'rganish rejasi",
+  smart_objectives: 'SMART maqsadlar',
+};
+
+function formatSectionName(key: string): string {
+  if (SECTION_NAME_MAP[key]) return SECTION_NAME_MAP[key];
+  return key
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function normalizeContent(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number') return String(value);
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeContent(item))
+      .filter(Boolean)
+      .join('; ');
+  }
+  if (value && typeof value === 'object') {
+    const objectValues = Object.values(value as Record<string, unknown>)
+      .map((item) => normalizeContent(item))
+      .filter(Boolean);
+    return objectValues.join('; ');
+  }
+  return '';
+}
+
+function extractPlanSections(plan: GeneratedLessonPlan): PlanSectionView[] {
+  const lessonStructure = plan.lesson_structure;
+  if (lessonStructure && typeof lessonStructure === 'object' && !Array.isArray(lessonStructure)) {
+    const entries = Object.entries(lessonStructure as Record<string, unknown>);
+    const sections = entries
+      .map(([key, value]) => {
+        if (!value) return null;
+
+        let time = '';
+        let content = '';
+
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          const section = value as Record<string, unknown>;
+          if (typeof section.duration === 'number') {
+            time = `${section.duration} daqiqa`;
+          }
+
+          const parts: string[] = [];
+          if (section.description) parts.push(normalizeContent(section.description));
+          if (section.teacher_notes) parts.push(normalizeContent(section.teacher_notes));
+          if (section.activities) parts.push(`Faoliyatlar: ${normalizeContent(section.activities)}`);
+          if (section.materials) parts.push(`Materiallar: ${normalizeContent(section.materials)}`);
+          if (section.segments) parts.push(`Bosqichlar: ${normalizeContent(section.segments)}`);
+          if (section.learning_objectives) {
+            parts.push(`Maqsadlar: ${normalizeContent(section.learning_objectives)}`);
+          }
+          if (section.big_ideas) parts.push(`Asosiy g'oyalar: ${normalizeContent(section.big_ideas)}`);
+          if (section.essential_questions) {
+            parts.push(`Muhim savollar: ${normalizeContent(section.essential_questions)}`);
+          }
+          if (section.other_evidence) parts.push(`Dalillar: ${normalizeContent(section.other_evidence)}`);
+
+          content = parts.filter(Boolean).join(' ');
+          if (!content) {
+            content = normalizeContent(section).slice(0, 600);
+          }
+        } else {
+          content = normalizeContent(value).slice(0, 600);
+        }
+
+        if (!content) return null;
+        return {
+          name: formatSectionName(key),
+          time,
+          content,
+        };
+      })
+      .filter((item): item is PlanSectionView => Boolean(item));
+
+    if (sections.length > 0) return sections;
+  }
+
+  const raw = (plan.raw_response || '')
+    .replace(/```json/gi, '')
+    .replace(/```/g, '')
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+
+  if (raw.length > 0) {
+    return raw.map((part, idx) => ({
+      name: `Bo'lim ${idx + 1}`,
+      time: '',
+      content: part,
+    }));
+  }
+
+  return MOCK_PLAN.sections.map((section) => ({
+    name: section.name,
+    time: section.time,
+    content: section.content,
+  }));
+}
 
 // ── Component ──────────────────────────────────────────────────────────
 export default function AIPlanner() {
@@ -177,22 +333,75 @@ export default function AIPlanner() {
     }, 1000);
   };
 
-  const handleGenerate = () => {
-    setIsGenerating(true);
-    // Mock generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      setShowPlan(true);
-      setActiveTab('plan');
+  const {
+    generatePlan,
+    loading: plannerLoading,
+    generatedPlan,
+    error: plannerError,
+  } = useLessonPlanner();
+  const [activeGeneratedPlan, setActiveGeneratedPlan] = useState<GeneratedLessonPlan | null>(null);
+
+  const currentPlan = activeGeneratedPlan || generatedPlan;
+  const effectiveGenerating = isGenerating || plannerLoading;
+  const selectedBloomForApi = selectedBlooms[0]
+    ? BLOOM_TO_API_LEVEL[selectedBlooms[0]]
+    : undefined;
+  const planSections = currentPlan ? extractPlanSections(currentPlan) : [];
+
+  const handleGeneratePlan = async () => {
+    if (!subject.trim() || !topic.trim()) {
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now(),
           role: 'ai',
-          text: "Dars reja tayyor! \"Dars reja\" tabiga o'ting ko'rish uchun. \u2728",
+          text: "Iltimos, avval 'Fan' va 'Mavzu' maydonlarini to'ldiring.",
         },
       ]);
-    }, 2500);
+      return;
+    }
+
+    setIsGenerating(true);
+    setShowPlan(false);
+    setActiveGeneratedPlan(null);
+
+    const generationResult = await generatePlan({
+      classId: selectedClass || 'manual-input',
+      subjectId: subject.trim(),
+      topic: `${subject.trim()} fani: ${topic.trim()}`,
+      planningModel: MODEL_TO_API_MODEL[selectedModel] || '5E',
+      bloomLevel: selectedBloomForApi,
+      duration,
+    });
+
+    setIsGenerating(false);
+
+    if (!generationResult.plan) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: 'ai',
+          text:
+            generationResult.error ||
+            plannerError ||
+            "Dars reja yaratishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+        },
+      ]);
+      return;
+    }
+
+    setActiveGeneratedPlan(generationResult.plan);
+    setShowPlan(true);
+    setActiveTab('plan');
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        role: 'ai',
+        text: `"${subject.trim()}" fani bo'yicha dars reja tayyor! "Dars reja" tabiga o'ting ko'rish uchun. ✨`,
+      },
+    ]);
   };
 
   const [configCollapsed, setConfigCollapsed] = useState(false);
@@ -427,12 +636,12 @@ export default function AIPlanner() {
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleGenerate}
-            disabled={isGenerating}
+            onClick={handleGeneratePlan}
+            disabled={effectiveGenerating}
             className="relative w-full py-3.5 rounded-2xl font-bold text-white text-[15px] bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 hover:from-emerald-600 hover:via-teal-600 hover:to-indigo-600 transition-all shadow-[0_20px_35px_-20px_rgba(16,185,129,0.85)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
-              {isGenerating ? (
+              {effectiveGenerating ? (
                 <>
                   <motion.div
                     animate={{ rotate: 360 }}
@@ -450,7 +659,7 @@ export default function AIPlanner() {
               )}
             </span>
             {/* Shimmer effect */}
-            {!isGenerating && (
+            {!effectiveGenerating && (
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 animate={{ x: ['-100%', '100%'] }}
@@ -595,16 +804,16 @@ export default function AIPlanner() {
                           <div className="flex items-start justify-between">
                             <div>
                               <h2 className="text-lg font-bold text-zinc-900 mb-1">
-                                {MOCK_PLAN.title}
+                                {currentPlan?.title || MOCK_PLAN.title}
                               </h2>
                               <div className="flex items-center gap-3 text-xs text-zinc-600">
                                 <span className="flex items-center gap-1">
                                   <Lightbulb className="size-3.5 text-emerald-600" />
-                                  {MOCK_PLAN.model}
+                                  {currentPlan ? API_MODEL_LABEL[currentPlan.planning_model] : MOCK_PLAN.model}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="size-3.5 text-indigo-600" />
-                                  {MOCK_PLAN.duration}
+                                  {currentPlan ? `${currentPlan.duration} daqiqa` : MOCK_PLAN.duration}
                                 </span>
                                 {selectedClass && (
                                   <span className="flex items-center gap-1">
@@ -624,7 +833,7 @@ export default function AIPlanner() {
                         </div>
 
                         {/* Plan Sections */}
-                        {MOCK_PLAN.sections.map((section, idx) => (
+                        {planSections.map((section, idx) => (
                           <motion.div
                             key={section.name}
                             initial={{ opacity: 0, y: 15 }}
