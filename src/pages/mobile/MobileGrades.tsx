@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Mic, MicOff, Check, X, AlertTriangle, Loader2,
-  Volume2, ChevronRight, RefreshCw, Info
+  Volume2, ChevronRight, RefreshCw, Trash2
 } from 'lucide-react';
-import { useVoiceMobileGrading, type VoiceMobileResult } from '../../hooks/useVoiceMobileGrading';
+import { useVoiceMobileGrading } from '../../hooks/useVoiceMobileGrading';
 
 const classOptions = ['5-A', '5-B', '6-A', '6-B', '7-A'];
 const subjectOptions = ['Matematika', 'Algebra', 'Geometriya', 'Fizika'];
@@ -58,21 +58,19 @@ function AudioWaves({ active }: { active: boolean }) {
 // Ovozli baho paneli
 function VoiceGradingPanel({
   studentNames,
-  onGrade,
+  onGradeMultiple,
   onClose,
 }: {
   studentNames: string[];
-  onGrade: (name: string, grade: number) => void;
+  onGradeMultiple: (grades: Record<string, number>) => void;
   onClose: () => void;
 }) {
   const {
-    isListening, isProcessing, isSupported,
-    transcript, result, error,
-    startListening, stopListening, cancelResult, setResult, setError,
+    isListening, isSupported,
+    transcript, detectedGrades, error,
+    startListening, stopListening, cancelResult, removeGrade, setError,
   } = useVoiceMobileGrading();
 
-  const [selectedName, setSelectedName] = useState<string | null>(null);
-  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [listenTime, setListenTime] = useState(0);
   const timerRef = useRef<any>(null);
@@ -88,38 +86,27 @@ function VoiceGradingPanel({
     return () => clearInterval(timerRef.current);
   }, [isListening]);
 
-  // Natija kelganda avtomatik to'ldirish
-  useEffect(() => {
-    if (result) {
-      setSelectedName(result.matchedStudentName);
-      setSelectedGrade(result.detectedScore);
-    }
-  }, [result]);
-
   function handleToggle() {
     if (isListening) {
-      stopListening(studentNames);
+      stopListening();
     } else {
       startListening(studentNames);
     }
   }
 
   function handleConfirm() {
-    if (!selectedName || !selectedGrade) return;
-    onGrade(selectedName, selectedGrade);
+    if (Object.keys(detectedGrades).length === 0) return;
+    onGradeMultiple(detectedGrades);
     setConfirmed(true);
     setTimeout(() => {
       setConfirmed(false);
       cancelResult();
-      setSelectedName(null);
-      setSelectedGrade(null);
+      onClose(); // tasdiqlangach panelni yopish
     }, 1500);
   }
 
   function handleCancel() {
     cancelResult();
-    setSelectedName(null);
-    setSelectedGrade(null);
   }
 
   if (!isSupported) {
@@ -146,21 +133,23 @@ function VoiceGradingPanel({
     );
   }
 
+  const detectedCount = Object.keys(detectedGrades).length;
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col">
       {/* Overlay */}
       <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
-      <div className="bg-white rounded-t-3xl shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 p-5 pb-6">
+        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 p-5 pb-6 shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
                 <Volume2 className="w-4 h-4 text-white" />
               </div>
-              <span className="text-white font-bold text-[15px]">Ovozli baho qo'yish</span>
+              <span className="text-white font-bold text-[15px]">Ovozli ommaviy baho</span>
             </div>
             <button
               onClick={onClose}
@@ -171,27 +160,27 @@ function VoiceGradingPanel({
           </div>
 
           {/* Yo'riqnoma */}
-          {!result && !isListening && !isProcessing && (
+          {!isListening && !transcript && detectedCount === 0 && (
             <div className="bg-white/15 rounded-2xl p-3 mb-4">
               <p className="text-white/90 text-[13px] font-medium leading-relaxed">
-                💡 <strong>Qanday gapirish kerak:</strong><br />
+                💡 <strong>Birinchidan, tinglash tugmasini bosing:</strong><br />
                 <span className="text-white/80">
-                  "Karimov Jasur besh" yoki "Abdullayeva to'rt"<br />
-                  "Nazarov 5" yoki "Islomova yaxshi"
+                  "Jasurga besh, Madinani to'rt qilib qo'y"<br />
+                  Siz gapirganingiz sari hamma o'quvchilar ushlanadi.
                 </span>
               </p>
             </div>
           )}
 
-          {/* Transkripsiya */}
+          {/* Uzluksiz Transkripsiya */}
           {(isListening || transcript) && (
-            <div className="bg-white/15 rounded-2xl px-4 py-3 mb-4 min-h-[48px] flex items-center gap-2">
-              <AudioWaves active={isListening} />
-              <p className="text-white text-[14px] flex-1 font-medium min-h-[20px]">
-                {transcript || (isListening ? 'Gapirayapsiz...' : '')}
+            <div className="bg-white/15 rounded-2xl px-4 py-3 mb-4 min-h-[48px] flex items-start gap-2 max-h-24 overflow-y-auto">
+              <div className="mt-1"><AudioWaves active={isListening} /></div>
+              <p className="text-white/90 text-[13px] flex-1 font-medium italic">
+                "{transcript || (isListening ? 'Gapirishingizni kutyapman...' : '')}"
               </p>
               {isListening && (
-                <span className="text-white/70 text-[12px] font-mono tabular-nums">
+                <span className="text-white/70 text-[12px] font-mono tabular-nums shrink-0">
                   {listenTime}s
                 </span>
               )}
@@ -201,21 +190,13 @@ function VoiceGradingPanel({
           {/* Mikrofon tugmasi */}
           <button
             onClick={handleToggle}
-            disabled={isProcessing}
             className={`w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-3 transition-all duration-300 ${
               isListening
                 ? 'bg-red-500 shadow-lg shadow-red-500/40'
-                : isProcessing
-                ? 'bg-white/20 cursor-wait'
                 : 'bg-white shadow-lg'
             }`}
           >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-5 h-5 text-white animate-spin" />
-                <span className="text-white">Tahlil qilinmoqda...</span>
-              </>
-            ) : isListening ? (
+            {isListening ? (
               <>
                 <MicOff className="w-5 h-5 text-white" />
                 <span className="text-white">To'xtatish</span>
@@ -224,164 +205,79 @@ function VoiceGradingPanel({
             ) : (
               <>
                 <Mic className="w-5 h-5 text-indigo-600" />
-                <span className="text-indigo-700">Bosing va gapiring</span>
+                <span className="text-indigo-700">Tinglashni boshlash</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Natijalar */}
-        <div className="p-5 space-y-4 max-h-[55vh] overflow-y-auto">
+        {/* Natijalar ro'yxati (List) */}
+        <div className="p-5 flex-1 overflow-y-auto min-h-[200px]">
 
           {/* Xato */}
           {error && (
-            <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-4">
+            <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-red-700 text-[14px] font-medium">{error}</p>
-                <button
-                  onClick={() => { setError(null); cancelResult(); }}
-                  className="text-red-500 text-[12px] font-semibold mt-1 flex items-center gap-1"
-                >
-                  <RefreshCw className="w-3 h-3" /> Qaytadan urinish
-                </button>
               </div>
             </div>
           )}
 
           {/* Muvaffaqiyat */}
           {confirmed && (
-            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
               <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
                 <Check className="w-5 h-5 text-white" strokeWidth={3} />
               </div>
               <div>
-                <p className="font-bold text-emerald-800">{selectedName}</p>
-                <p className="text-emerald-600 text-[13px]">{selectedGrade}-baho muvaffaqiyatli qo'yildi!</p>
+                <p className="font-bold text-emerald-800">Saqlandi</p>
+                <p className="text-emerald-600 text-[13px]">{detectedCount} o'quvchiga baho qo'yildi!</p>
               </div>
             </div>
           )}
 
-          {/* Natija ko'rsatish */}
-          {result && !confirmed && (
+          {!confirmed && detectedCount > 0 && (
             <>
-              {/* O'quvchi topilmadi */}
-              {result.status === 'rejected' && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    <p className="text-amber-700 font-semibold text-[14px]">O'quvchi topilmadi</p>
-                  </div>
-                  <p className="text-amber-600 text-[13px]">
-                    "{result.transcript}" — ism tanilmadi. Quyida qo'lda tanlang:
-                  </p>
-                </div>
-              )}
-
-              {/* Noaniq — bir nechta nomzod */}
-              {result.status === 'ambiguous' && result.candidateNames.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-amber-600 text-[12px] font-semibold flex items-center gap-1">
-                    <Info className="w-3.5 h-3.5" />
-                    Bir xil isimli o'quvchilar — birini tanlang:
-                  </p>
-                  {[result.matchedStudentName!, ...result.candidateNames].map(name => (
-                    <button
-                      key={name}
-                      onClick={() => setSelectedName(name)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all ${
-                        selectedName === name
-                          ? 'border-indigo-400 bg-indigo-50'
-                          : 'border-zinc-100 bg-white'
-                      }`}
-                    >
-                      <span className="font-semibold text-[14px] text-zinc-800">{name}</span>
-                      {selectedName === name && <Check className="w-4 h-4 text-indigo-500" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Topilgan o'quvchi */}
-              {result.matchedStudentName && result.status !== 'rejected' && result.status !== 'ambiguous' && (
-                <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-indigo-700 font-black text-[12px]">
-                      {result.matchedStudentName.split(' ').map(p => p[0]).join('').slice(0, 2)}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-zinc-900">{result.matchedStudentName}</p>
-                    <p className="text-indigo-500 text-[12px]">
-                      {Math.round(result.confidence * 100)}% aniqlik · "{result.transcript}"
-                    </p>
-                  </div>
-                  <Check className="w-5 h-5 text-indigo-500" />
-                </div>
-              )}
-
-              {/* O'quvchini qo'lda tanlash */}
-              {(result.status === 'rejected' || !selectedName) && (
-                <div>
-                  <p className="text-[12px] font-semibold text-zinc-500 mb-2 uppercase tracking-wide">
-                    O'quvchini tanlang
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto">
-                    {studentNames.map(name => (
-                      <button
-                        key={name}
-                        onClick={() => setSelectedName(name)}
-                        className={`px-3 py-2 rounded-xl border-2 text-[12px] font-semibold text-left transition-all ${
-                          selectedName === name
-                            ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                            : 'border-zinc-100 bg-zinc-50 text-zinc-700'
-                        }`}
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-[13px] font-bold text-zinc-500 uppercase tracking-wide">
+                  Topilgan baholar ({detectedCount})
+                </h4>
+              </div>
+              
+              <div className="space-y-2 mb-6">
+                {Object.entries(detectedGrades).map(([name, score]) => {
+                  const colors = gradeColor(score);
+                  return (
+                    <div key={name} className="flex items-center gap-3 bg-white border border-zinc-200 rounded-2xl p-3 shadow-sm animate-in slide-in-from-bottom-2">
+                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-lg ${colors.bg}`}>
+                        {score}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-zinc-900 truncate">{name}</p>
+                      </div>
+                      <button 
+                        onClick={() => removeGrade(name)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                       >
-                        {name}
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Baho tanlash */}
-              <div>
-                <p className="text-[12px] font-semibold text-zinc-500 mb-2 uppercase tracking-wide">
-                  Baho
-                </p>
-                <div className="flex gap-2">
-                  {gradeValues.map(g => {
-                    const colors = gradeColor(g);
-                    const isSelected = selectedGrade === g;
-                    return (
-                      <button
-                        key={g}
-                        onClick={() => setSelectedGrade(g)}
-                        className={`flex-1 h-12 rounded-xl font-black text-lg transition-all ${
-                          isSelected
-                            ? `${colors.bg} text-white shadow-lg scale-105`
-                            : 'bg-zinc-100 text-zinc-600'
-                        }`}
-                      >
-                        {g}
-                      </button>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Harakatlar */}
-              <div className="flex gap-3 pt-1">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleCancel}
                   className="flex-1 py-3 bg-zinc-100 text-zinc-600 font-semibold rounded-2xl text-[14px]"
                 >
-                  Bekor qilish
+                  Tozalash
                 </button>
                 <button
                   onClick={handleConfirm}
-                  disabled={!selectedName || !selectedGrade}
-                  className="flex-1 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold rounded-2xl text-[14px] flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg"
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl text-[14px] flex items-center justify-center gap-2 shadow-lg"
                 >
                   Tasdiqlash <ChevronRight className="w-4 h-4" />
                 </button>
@@ -390,17 +286,14 @@ function VoiceGradingPanel({
           )}
 
           {/* Hali natija yo'q — ko'rsatma */}
-          {!result && !error && !isListening && !isProcessing && (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <Mic className="w-6 h-6 text-violet-400" />
+          {detectedCount === 0 && !error && !isListening && (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Volume2 className="w-8 h-8 text-zinc-300" />
               </div>
-              <p className="text-zinc-500 text-[13px]">
-                Yuqoridagi tugmani bosing va o'quvchi ism-familiyasini<br />
-                hamda bahoni aytib bering
-              </p>
-              <p className="text-zinc-400 text-[12px] mt-2 font-medium">
-                Misol: "Karimov Jasur to'rt" yoki "Madina besh"
+              <p className="text-zinc-500 text-[14px] font-medium leading-relaxed">
+                Tinglashni boshlang va xohlagancha qo'ying. <br/>
+                Topilgan baholar shu yerda paydo bo'ladi.
               </p>
             </div>
           )}
@@ -415,7 +308,7 @@ export default function MobileGrades() {
   const [selectedSubject, setSelectedSubject] = useState('Matematika');
   const [grades, setGrades] = useState<Record<string, number | null>>({});
   const [showVoicePanel, setShowVoicePanel] = useState(false);
-  const [lastVoiceGrade, setLastVoiceGrade] = useState<{ name: string; grade: number } | null>(null);
+  const [lastVoiceGradeMessage, setLastVoiceGradeMessage] = useState<string | null>(null);
 
   const handleGrade = (student: string, grade: number) => {
     setGrades((prev) => ({
@@ -424,10 +317,14 @@ export default function MobileGrades() {
     }));
   };
 
-  const handleVoiceGrade = (name: string, grade: number) => {
-    setGrades(prev => ({ ...prev, [name]: grade }));
-    setLastVoiceGrade({ name, grade });
-    setTimeout(() => setLastVoiceGrade(null), 3000);
+  const handleVoiceGradeMultiple = (multipleGrades: Record<string, number>) => {
+    const changesCount = Object.keys(multipleGrades).length;
+    if (changesCount === 0) return;
+
+    setGrades(prev => ({ ...prev, ...multipleGrades }));
+    setLastVoiceGradeMessage(`Ovoz orqali ${changesCount} ta baho saqlandi`);
+    
+    setTimeout(() => setLastVoiceGradeMessage(null), 3000);
   };
 
   const gradedCount = Object.values(grades).filter(Boolean).length;
@@ -448,15 +345,14 @@ export default function MobileGrades() {
       </div>
 
       {/* So'nggi ovozli baho bildirishi */}
-      {lastVoiceGrade && (
-        <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 animate-in slide-in-from-top-2 duration-300">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-sm ${gradeColor(lastVoiceGrade.grade).bg}`}>
-            {lastVoiceGrade.grade}
+      {lastVoiceGradeMessage && (
+        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-sm bg-emerald-500`}>
+             <Check className="w-4 h-4" />
           </div>
-          <p className="text-indigo-800 text-[13px] font-semibold flex-1">
-            <span className="font-bold">{lastVoiceGrade.name}</span>ga ovoz bilan baho qo'yildi
+          <p className="text-emerald-800 text-[13px] font-semibold flex-1">
+            {lastVoiceGradeMessage}
           </p>
-          <Check className="w-4 h-4 text-indigo-500" />
         </div>
       )}
 
@@ -498,13 +394,10 @@ export default function MobileGrades() {
       <div className="space-y-2">
         {mockStudents.map((student, i) => {
           const currentGrade = grades[student];
-          const isJustVoiced = lastVoiceGrade?.name === student;
           return (
             <div
               key={student}
-              className={`bg-white rounded-xl p-3 flex items-center justify-between shadow-sm transition-all duration-300 ${
-                isJustVoiced ? 'ring-2 ring-indigo-400 ring-offset-1' : ''
-              }`}
+              className={`bg-white rounded-xl p-3 flex items-center justify-between shadow-sm transition-all duration-300`}
             >
               <div className="flex items-center gap-3">
                 <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
@@ -558,7 +451,7 @@ export default function MobileGrades() {
       {showVoicePanel && (
         <VoiceGradingPanel
           studentNames={mockStudents}
-          onGrade={handleVoiceGrade}
+          onGradeMultiple={handleVoiceGradeMultiple}
           onClose={() => setShowVoicePanel(false)}
         />
       )}
