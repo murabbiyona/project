@@ -18,7 +18,6 @@ import {
   Loader2,
   X,
   FileType,
-  FileSpreadsheet,
 } from 'lucide-react';
 import {
   type ExamQuestion,
