@@ -3,6 +3,7 @@ import { Search, Plus, FileText, ArrowUp, Layers, GraduationCap, X, ChevronDown,
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LessonsCalendar from '../components/lessons/LessonsCalendar';
+import { useCurriculum } from '../contexts/CurriculumContext';
 
 const CLASSES = [
   { id: '1', name: '5-A', color: 'bg-rose-500', colorName: 'rose', units: 5, lessons: 12 },
@@ -50,9 +51,8 @@ export default function Lessons() {
   const [moveTargetClass, setMoveTargetClass] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
-  // Upload states
-  const [ishReja, setIshReja] = useState<File | null>(null);
-  const [darslik, setDarslik] = useState<File | null>(null);
+  // Upload states (shared via context)
+  const { workPlanFile: ishReja, setWorkPlanFile: setIshReja, textbookFile: darslik, setTextbookFile: setDarslik, todaysTopic, isParsing } = useCurriculum();
   const ishRejaRef = useRef<HTMLInputElement>(null);
   const darslikRef = useRef<HTMLInputElement>(null);
 
@@ -264,13 +264,31 @@ export default function Lessons() {
               </div>
             </button>
 
-            {/* AI status indicator */}
-            {(ishReja || darslik) && (
+            {/* Parsing status */}
+            {isParsing && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-100">
+                <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-[10px] font-bold text-indigo-600">Ish reja tahlil qilinmoqda...</span>
+              </div>
+            )}
+
+            {/* Today's topic indicator */}
+            {todaysTopic && !isParsing && (
+              <div className="px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
+                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-wider">Bugungi mavzu</span>
+                </div>
+                <p className="text-[11px] font-extrabold text-slate-800 leading-tight">{todaysTopic.topic}</p>
+                <p className="text-[9px] font-bold text-slate-400 mt-0.5">{todaysTopic.rawDate}</p>
+              </div>
+            )}
+
+            {/* AI ready indicator */}
+            {(ishReja || darslik) && !isParsing && !todaysTopic && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] font-bold text-emerald-600">
-                  AI dars reja tuzishga tayyor
-                </span>
+                <span className="text-[10px] font-bold text-emerald-600">AI dars reja tuzishga tayyor</span>
               </div>
             )}
           </div>

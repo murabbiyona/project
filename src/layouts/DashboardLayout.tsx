@@ -2,9 +2,11 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 import FloatingAssistant from '../components/ai/FloatingAssistant';
+import { CurriculumProvider } from '../contexts/CurriculumContext';
 
 export default function DashboardLayout() {
   return (
+    <CurriculumProvider>
     <div 
       className="group/sidebar-wrapper flex w-full h-screen overflow-hidden bg-background"
       style={{ '--sidebar-width': '16rem', '--sidebar-width-icon': '4.5rem' } as React.CSSProperties}
@@ -25,5 +27,6 @@ export default function DashboardLayout() {
       </div>
       <FloatingAssistant />
     </div>
+    </CurriculumProvider>
   );
 }

@@ -5,8 +5,11 @@ import {
   Calendar, X, Plus, Undo2, Redo2, Bold, Italic, Underline,
   Strikethrough, List, ListOrdered, Code, Minus, Link2,
   Image as ImageIcon, Video, File, Sliders, Clock, Target,
-  Loader2, Search, RefreshCw, Send, Copy, BookOpen, Sparkles
+  Loader2, Search, RefreshCw, Send, Copy, BookOpen, Sparkles,
+  AlertCircle, FileSpreadsheet
 } from 'lucide-react';
+import { useCurriculum } from '../contexts/CurriculumContext';
+import { supabase } from '../lib/supabase';
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 const CLASSES_DATA = [
@@ -520,24 +523,6 @@ const ALL_STANDARDS = [
   { code: 'INF.9.4.11', desc: 'Loyiha: Ma\u02bcumotlar bazasini boshqarish tizimi' },
 ];
 
-const AI_RESPONSE = `Ushbu dars mazmuniga asoslanib, quyidagi tavsiyalarni berish mumkin:
-
-**1. Fayl tuzilmasini vizualizatsiya qilish:**
-O'quvchilarga shunchaki papka ochishni emas, balki "Virtual Kutubxona" loyihasini yarattiring.
-• *Namuna:* "Maktab" papkasi → Ichida "9-sinf" → Uning ichida "Informatika", "Tarix", "Ona tili" papkalari. Bu iyerarxiya tushunchasini hayotiy misol bilan mustahkamlaydi.
-
-**2. Amaliy topshiriqni murakkablashtirish:**
-O'quvchilarga shunchaki papka ochishni emas, balki "Virtual Kutubxona" loyihasini yarattiring.
-
-**3. Tabaqalashtirilgan ta\u02bcim (Diferensiatsiya):**
-• **Iqtidorli o'quvchilar uchun:** Fayllarni "Saralash" (Sort by) funksiyasidan tashqari, "Guruhlash" (Group by) funksiyasini o'rgatish.
-• **Yordamga muhtoj o'quvchilar uchun:** Fayl nomini o'zgartirishda (nuqtadan keyingi qismini) o'chirib yubormaslik haqida eslatma berish (chunki fayl ochilmay qolishi mumkin).
-
-**4. Baholash uchun Exit Ticket (Darsdan chiqish chiptasi):**
-Dars oxirida o'quvchilarga quyidagi savolni bering: "Agar kompyuteringizda barcha papkalar o'chib ketib, 1000 ta fayl aralashib yotsa, ularni qaysi 3 ta belgi bo'yicha tartiblagan bo'lar edingiz? (Turi, sanasi, nomi)"
-
-*Xulosa:* Rejangiz dars o'tish uchun tayyor va sifatli.`;
-
 // ─── Standards Panel ──────────────────────────────────────────────────────────
 function StandardsPanel({ onClose }: { onClose: () => void }) {
   const [tagged, setTagged] = useState<string[]>(['INF.9.4.1']);
@@ -692,13 +677,22 @@ const BLOOM_LEVELS = [
 
 const DURATIONS = [35, 40, 45, 80];
 
-const MOCK_PLAN_SECTIONS = [
-  { name: "Jalb qilish (Engage)", time: "5 daq", content: "O'quvchilarga real hayotdan to'g'ri burchakli uchburchak misollarini ko'rsating." },
-  { name: "Tadqiq qilish (Explore)", time: "12 daq", content: "Guruhda ishlash. Har bir guruhga turli o'lchamdagi uchburchaklar beriladi." },
-  { name: "Tushuntirish (Explain)", time: "10 daq", content: "Formulani rasmiy tarzda taqdim eting. Vizual isbotni ko'rsating." },
-  { name: "Kengaytirish (Elaborate)", time: "13 daq", content: "Murakkabroq masalalarni yeching: masofa hisoblash, koordinatalar." },
-  { name: "Baholash (Evaluate)", time: "5 daq", content: "Qisqa mustaqil ish: 3 ta masala. O'z-o'zini baholash varaqasi." },
-];
+/** Convert markdown-like AI response to simple HTML */
+function formatAIPlan(text: string): string {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li><strong>$1.</strong> $2</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`)
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br/>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
 
 // ─── AI Assistant Panel ────────────────────────────────────────────────────────
 function AIAssistantPanel({ onClose }: { onClose: () => void }) {
@@ -709,10 +703,14 @@ function AIAssistantPanel({ onClose }: { onClose: () => void }) {
   const [selectedBlooms, setSelectedBlooms] = useState<string[]>([]);
   const [duration, setDuration] = useState(45);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showPlan, setShowPlan] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  const { todaysTopic, workPlan } = useCurriculum();
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(AI_RESPONSE.replace(/\*\*/g, ''));
+    const text = generatedPlan || '';
+    navigator.clipboard.writeText(text.replace(/\*\*/g, ''));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -721,12 +719,69 @@ function AIAssistantPanel({ onClose }: { onClose: () => void }) {
     setSelectedBlooms(prev => prev.includes(label) ? prev.filter(b => b !== label) : [...prev, label]);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
-    setTimeout(() => {
+    setGenerateError(null);
+    setGeneratedPlan(null);
+
+    const topic = todaysTopic?.topic || 'Mavzu aniqlanmadi';
+    const date = todaysTopic?.date || new Date().toISOString().slice(0, 10);
+    const modelInfo = PLANNING_MODELS.find(m => m.id === selectedModel);
+    const bloomText = selectedBlooms.length > 0 ? selectedBlooms.join(', ') : 'Barcha darajalar';
+
+    const lessonPrompt = `Ustoz, men bugungi dars uchun to'liq dars reja yaratishingizni so'rayman.
+
+📅 Sana: ${date}
+📚 Mavzu: ${topic}
+${workPlan?.subject ? `📖 Fan: ${workPlan.subject}` : ''}
+${workPlan?.className ? `🏫 Sinf: ${workPlan.className}` : ''}
+
+⚙️ Sozlamalar:
+- Rejalashtirish modeli: ${modelInfo?.title || '5E'} (${modelInfo?.subtitle || ''})
+- Blum taksonomiyasi darajalari: ${bloomText}
+- Dars davomiyligi: ${duration} daqiqa
+
+Iltimos, quyidagi tuzilmada batafsil dars reja yarating:
+
+1. 🎯 DARS MAQSADLARI (SMART formatida, Blum taksonomiyasi darajalariga mos)
+2. 📋 DARS REJASI (${modelInfo?.title || '5E'} modeli bo'yicha, har bir bosqich uchun aniq vaqt va faoliyat)
+3. 📝 BAHOLASH MEZONLARI
+4. 📚 KERAKLI MATERIALLAR va RESURSLAR
+5. 🏠 UY VAZIFASI${todaysTopic?.homework ? `\n\nIsh rejadagi uy vazifasi: ${todaysTopic.homework}` : ''}
+
+Har bir bosqich uchun aniq vaqt (daqiqalarda), o'qituvchi faoliyati va o'quvchi faoliyatini alohida yozing.
+Jami vaqt ${duration} daqiqaga teng bo'lishi kerak.`;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        setGenerateError("Tizimga kiring. AI funksiyasidan foydalanish uchun avtorizatsiya talab qilinadi.");
+        setIsGenerating(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('gemini-ai', {
+        body: {
+          messages: [{ role: 'user', content: lessonPrompt }],
+          model: 'gpt-4o-mini',
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || "AI xizmatida xatolik");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setGeneratedPlan(data.content);
+    } catch (err: any) {
+      setGenerateError(err.message || "Dars reja yaratishda xatolik yuz berdi");
+    } finally {
       setIsGenerating(false);
-      setShowPlan(true);
-    }, 2000);
+    }
   };
 
   return (
@@ -823,6 +878,31 @@ function AIAssistantPanel({ onClose }: { onClose: () => void }) {
           {/* AI Lesson Planner */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
 
+            {/* Today's Topic from Work Plan */}
+            {todaysTopic ? (
+              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-[14px]">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Bugungi mavzu</span>
+                </div>
+                <p className="text-[13px] font-bold text-slate-900 leading-snug">{todaysTopic.topic}</p>
+                <p className="text-[11px] text-slate-500 mt-1">📅 {todaysTopic.date}{workPlan?.className ? ` · ${workPlan.className}` : ''}{workPlan?.subject ? ` · ${workPlan.subject}` : ''}</p>
+                {todaysTopic.homework && (
+                  <p className="text-[11px] text-slate-500 mt-0.5">📝 Uy vazifasi: {todaysTopic.homework}</p>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-[14px]">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Ish reja yuklanmagan</span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Darsliklar sahifasiga o'ting va Choraklik ish rejangizni (Excel) yuklang. AI avtomatik ravishda bugungi mavzuni topadi.
+                </p>
+              </div>
+            )}
+
             {/* Planning Model */}
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Rejalashtirish modeli</span>
@@ -895,24 +975,37 @@ function AIAssistantPanel({ onClose }: { onClose: () => void }) {
               )}
             </button>
 
+            {/* Error */}
+            {generateError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-[14px]">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                  <span className="text-[11px] font-bold text-red-600">Xatolik</span>
+                </div>
+                <p className="text-[11px] text-red-600">{generateError}</p>
+              </div>
+            )}
+
             {/* Generated Plan */}
-            {showPlan && (
+            {generatedPlan && (
               <div className="space-y-2.5 pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Yaratilgan reja</span>
-                  <button className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">
-                    <BookOpen className="w-3 h-3" /> Darsga qo'shish
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <Copy className="w-3 h-3" /> {copied ? 'Nusxalandi!' : 'Nusxalash'}
                   </button>
                 </div>
-                {MOCK_PLAN_SECTIONS.map((section, idx) => (
-                  <div key={idx} className="p-3 bg-white border border-slate-100 rounded-[14px] shadow-sm">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[12px] font-extrabold text-slate-900">{section.name}</span>
-                      <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{section.time}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">{section.content}</p>
-                  </div>
-                ))}
+                <div className="p-4 bg-white border border-slate-100 rounded-[14px] shadow-sm">
+                  <div
+                    className="text-[12px] text-slate-700 leading-relaxed prose prose-sm max-w-none
+                      prose-headings:text-slate-900 prose-headings:font-extrabold prose-headings:text-[13px] prose-headings:mb-2 prose-headings:mt-3
+                      prose-p:mb-2 prose-li:mb-0.5 prose-strong:text-slate-900"
+                    dangerouslySetInnerHTML={{ __html: formatAIPlan(generatedPlan) }}
+                  />
+                </div>
               </div>
             )}
           </div>
