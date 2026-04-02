@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Mic, MicOff, Check, X, AlertTriangle,
-  Volume2, ChevronRight, Info
+  Mic, MicOff, Check, X, AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useVoiceMobileGrading } from '../../hooks/useVoiceMobileGrading';
@@ -60,17 +59,17 @@ export default function MobileGrades() {
   const [selectedClass, setSelectedClass] = useState('5-A');
   const [selectedSubject, setSelectedSubject] = useState('Matematika');
   const [grades, setGrades] = useState<Record<string, number | null>>({});
-  
+
   // Voice Hook
   const {
-    isListening, isSupported,
+    isListening,
     transcript, detectedGrades, error,
     startListening, stopListening, cancelResult, setError
   } = useVoiceMobileGrading();
 
   const [listenTime, setListenTime] = useState(0);
   const timerRef = useRef<any>(null);
-  
+
   // Eng oxirgi qo'shilgan/o'zgargan ovozli baholar
   const [recentlyVoiced, setRecentlyVoiced] = useState<Record<string, boolean>>({});
 
@@ -91,12 +90,12 @@ export default function MobileGrades() {
       setGrades(prev => {
         const next = { ...prev };
         let hasChanges = false;
-        
+
         for (const [student, score] of Object.entries(detectedGrades)) {
           if (next[student] !== score) {
             next[student] = score;
             hasChanges = true;
-            
+
             // Animatsiya uchun qayd etamiz
             setRecentlyVoiced(curr => ({ ...curr, [student]: true }));
             // 2 soniyadan so'ng animatsiyani o'chiramiz
@@ -109,7 +108,7 @@ export default function MobileGrades() {
             }, 2000);
           }
         }
-        
+
         return hasChanges ? next : prev;
       });
     }
@@ -129,7 +128,7 @@ export default function MobileGrades() {
       {/* Header - Endi u ekranda (tepada) doimiy qoladi va chiroyli effektga ega */}
       <div className="sticky -top-4 z-40 -mx-4 px-4 pt-4 pb-3 bg-white/85 backdrop-blur-2xl border-b border-zinc-200/50 shadow-sm mix-blend-multiply transition-all duration-300 flex items-center justify-between">
         <h1 className="text-[22px] font-black text-zinc-900 tracking-tight">Tezkor baholash</h1>
-        
+
         {/* Yuqoridagi Ovoz tugmasi */}
         {!isListening && (
            <button
@@ -190,7 +189,7 @@ export default function MobileGrades() {
         {mockStudents.map((student, i) => {
           const currentGrade = grades[student];
           const isJustVoiced = recentlyVoiced[student];
-          
+
           return (
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -206,7 +205,7 @@ export default function MobileGrades() {
               {isJustVoiced && (
                 <div className="absolute top-0 right-0 left-0 h-0.5 bg-indigo-500 animate-pulse" />
               )}
-              
+
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
@@ -228,12 +227,12 @@ export default function MobileGrades() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 {gradeValues.map((grade) => {
                   const colors = gradeColor(grade);
                   const isSelected = grades[student] === grade;
-                  
+
                   return (
                     <button
                       key={grade}
@@ -257,7 +256,7 @@ export default function MobileGrades() {
       {/* Ekran ostidagi suzuvchi panel */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md pb-[75px] pt-12 px-4 bg-gradient-to-t from-zinc-100 via-zinc-100/90 to-transparent pointer-events-none z-40">
         <div className="w-full pointer-events-auto">
-          
+
           {/* KUZATISH PANELI (OVOZ YOZILAYOTGANDA) */}
           {isListening ? (
              <div className="bg-white border-[3px] border-indigo-500 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5">
@@ -270,20 +269,20 @@ export default function MobileGrades() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[13px] font-bold text-indigo-500 font-mono">{listenTime}s</span>
-                    <button 
-                      onClick={() => { stopListening(); cancelResult(); }} 
+                    <button
+                      onClick={() => { stopListening(); cancelResult(); }}
                       className="flex items-center gap-1 text-[12px] font-bold text-white bg-red-500 px-3 py-1.5 rounded-lg active:scale-95"
                     >
                       <MicOff className="w-3.5 h-3.5" /> To'xtatish
                     </button>
                   </div>
                </div>
-               
+
                <div className="p-4 bg-white relative">
                  <p className={`text-[14px] font-medium leading-relaxed italic ${transcript ? 'text-indigo-800' : 'text-zinc-400'}`}>
                    "{transcript || 'O\'quvchi ismini va bahoni ayting (Masalan: Jasurga besh)...'}"
                  </p>
-                 
+
                  {Object.keys(detectedGrades).length > 0 && (
                    <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-50 px-2 py-1 rounded-md">
                      <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -303,7 +302,7 @@ export default function MobileGrades() {
                  <Mic className="w-6 h-6 mb-1" />
                  <span className="text-[10px] font-bold uppercase tracking-wider">Ovoz</span>
                </button>
-               
+
                <button className="flex-1 h-[60px] bg-emerald-500 text-white font-bold text-[16px] rounded-2xl active:bg-emerald-600 shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 border border-emerald-400">
                  Jurnalni Saqlash
                  <span className="bg-white text-emerald-600 px-2.5 py-0.5 rounded-lg text-[13px]">
